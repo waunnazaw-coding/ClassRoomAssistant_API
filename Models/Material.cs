@@ -16,6 +16,6 @@ public partial class Material
     public DateTime? CreatedAt { get; set; }
 
     public virtual ClassWork ClassWork { get; set; } = null!;
-   // public virtual ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
+   
 
 }

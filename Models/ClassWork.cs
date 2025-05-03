@@ -27,5 +27,5 @@ public partial class ClassWork
 
     public virtual Topic? Topic { get; set; }
     
-    public virtual ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
+    
 }
