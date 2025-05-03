@@ -20,7 +20,7 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
         {
             return await _context.Classes
                 .AsNoTracking()
-                .Where(c => !c.IsDeleted)
+                .Where(c => c.IsDeleted == false)
                 .ToListAsync();
         }
 
@@ -28,7 +28,7 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
         {
             return await _context.Classes
                 .AsNoTracking()
-                .Where(c => c.IsDeleted)
+                .Where(c => c.IsDeleted == true)
                 .ToListAsync();
         }
 
@@ -36,7 +36,7 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
         {
             return await _context.Classes
                 .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
+                .FirstOrDefaultAsync(c => c.Id == id && c.IsDeleted == false);
         }
 
         public async Task<Class?> GetClassDetailsAsync(int id)
@@ -45,7 +45,7 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 .AsNoTracking()
                 .Include(c => c.ClassParticipants)
                     .ThenInclude(cp => cp.User)
-                .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
+                .FirstOrDefaultAsync(c => c.Id == id && c.IsDeleted == false);
         }
 
         public async Task<Class> AddClassAsync(Class entity)
@@ -58,7 +58,7 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
         public async Task<Class?> UpdateClassAsync(Class entity)
         {
             var existing = await _context.Classes.FindAsync(entity.Id);
-            if (existing == null || existing.IsDeleted)
+            if (existing == null || existing.IsDeleted == true)
                 return null;
 
             existing.Name = entity.Name;
@@ -73,7 +73,7 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
         public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _context.Classes.FindAsync(id);
-            if (entity == null || entity.IsDeleted)
+            if (entity == null || entity.IsDeleted == true)
                 return false;
 
             entity.IsDeleted = true;
