@@ -16,12 +16,14 @@ public class MaterialRepository : IMaterialRepository
 
     public async Task<Material?> GetByIdWithAttachmentsAsync(int materialId)
     {
-        return await _context.Materials
+        var entities =  await _context.Materials
             .AsNoTracking()
             .Include(m => m.ClassWork)
             //.Include(m => m.Attachments) 
-            .ThenInclude(cw => cw.Attachments)
+            //.ThenInclude(cw => cw.Attachments)
             .FirstOrDefaultAsync(m => m.Id == materialId);
+
+        return entities;
     }
     public async Task<Material> AddAsync(Material material)
     {

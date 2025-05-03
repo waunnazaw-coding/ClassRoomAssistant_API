@@ -28,6 +28,8 @@ public class MaterialService : IMaterialService
     {
         var material = await _materialRepo.GetByIdWithAttachmentsAsync(materialId);
         if (material == null) return null;
+        
+        var attachments = await _attachmentRepo.GetByReferenceAsync(material.Id, "Material");
 
         return new MaterialDetailResponseDto
         {
@@ -35,7 +37,7 @@ public class MaterialService : IMaterialService
             Title = material.Title,
             Description = material.Description,
             ClassWorkId = material.ClassWorkId,
-            Attachments = material.ClassWork.Attachments
+            Attachments = attachments
                 .OrderBy(a => a.Id)
                 .Select(a => new AttachmentDetailDto
                 {
@@ -75,7 +77,7 @@ public class MaterialService : IMaterialService
             // 3. Create Attachments
             var attachments = request.Attachments.Select(a => new Attachment
             {
-                ReferenceId = classWork.Id,
+                ReferenceId = material.Id,
                 ReferenceType = "Material",
                 FileType = a.FileType,
                 FileUrl = a.FileUrl,
@@ -156,10 +158,10 @@ public class MaterialService : IMaterialService
             }
 
             // delete attachments not present in update DTO (if required)
-            if (existingDict.Any())
-            {
-                await _attachmentRepo.DeleteRangeAsync(existingDict.Values);
-            }
+            //if (existingDict.Any())
+            //{
+            //    await _attachmentRepo.DeleteRangeAsync(existingDict.Values);
+            //}
 
             await transaction.CommitAsync();
             
