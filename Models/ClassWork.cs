@@ -26,6 +26,4 @@ public partial class ClassWork
     public virtual ICollection<Todo> Todos { get; set; } = new List<Todo>();
 
     public virtual Topic? Topic { get; set; }
-    
-    
 }
