@@ -22,11 +22,19 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 .ToListAsync();
         }
         
+        public async Task<IEnumerable<int>> GetUserIdsByClassIdAsync(int classId)
+        {
+            return await _context.ClassParticipants
+                .Where(cp => cp.ClassId == classId)
+                .Select(cp => cp.UserId.Value)
+                .ToListAsync();
+        }
+        
         public async Task<List<int>> GetStudentUserIdsByClassIdAsync(int classId)
         {
             return await _context.ClassParticipants
                 .Where(cp => cp.ClassId == classId && cp.Role == "Student" && cp.UserId != null)
-                .Select(cp => cp.UserId!.Value)
+                .Select(cp => cp.UserId.Value)
                 .ToListAsync();
         }
 
