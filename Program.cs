@@ -31,6 +31,9 @@ namespace ClassRoomClone_App.Server
             builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
             builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
             builder.Services.AddScoped<IClassWorkRepository, ClassWorkRepository>();
+            builder.Services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
+            builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
             
             //Register Services
             builder.Services.AddScoped<IClassService, ClassService>();
@@ -38,8 +41,10 @@ namespace ClassRoomClone_App.Server
             builder.Services.AddScoped<IClassParticipantsService, ClassParticipantsService>();
             builder.Services.AddScoped<IAssignmentService, AssignmentService>();
             builder.Services.AddScoped<IMaterialService, MaterialService>();
+            builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
             builder.Services.AddScoped<IClassWorkService, ClassWorkService>();
-           
+            builder.Services.AddScoped<IMessageService, MessageService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
             
             
             var app = builder.Build();
