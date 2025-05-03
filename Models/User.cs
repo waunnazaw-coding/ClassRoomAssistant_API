@@ -15,6 +15,8 @@ public partial class User
 
     public DateTime? CreatedAt { get; set; }
 
+    public string? Profile { get; set; }
+
     public virtual ICollection<AssignmentFile> AssignmentFiles { get; set; } = new List<AssignmentFile>();
 
     public virtual ICollection<AssignmentProgress> AssignmentProgressGradedByNavigations { get; set; } = new List<AssignmentProgress>();
