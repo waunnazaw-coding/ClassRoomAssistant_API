@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassRoomClone_App.Server.Models;
@@ -44,6 +45,8 @@ public partial class DbContextClassName : DbContext
     public virtual DbSet<Topic> Topics { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
+    
+    public virtual DbSet<UserNotificationRawDto> UserNotificationRawDtos { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -51,6 +54,13 @@ public partial class DbContextClassName : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        
+        modelBuilder.Entity<UserNotificationRawDto>(entity =>
+        {
+            entity.HasNoKey();
+            entity.ToView(null);
+        });
+        
         modelBuilder.Entity<Announcement>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Announce__3214EC07E2CAF7DF");
@@ -146,6 +156,9 @@ public partial class DbContextClassName : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Classes__3214EC0790070208");
 
+            entity.Property(e => e.ClassCode)
+                .HasMaxLength(10)
+                .IsFixedLength();
             entity.Property(e => e.CreatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -251,31 +264,37 @@ public partial class DbContextClassName : DbContext
 
         modelBuilder.Entity<Message>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Messages__3214EC07F4484CA4");
+            entity.HasKey(e => e.Id).HasName("PK__Messages__3214EC0798229969");
 
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+            entity.Property(e => e.IsPrivate).HasDefaultValue(false);
             entity.Property(e => e.Message1).HasColumnName("Message");
-
-            entity.HasOne(d => d.Class).WithMany(p => p.Messages)
-                .HasForeignKey(d => d.ClassId)
-                .HasConstraintName("FK__Messages__ClassI__71D1E811");
+            entity.Property(e => e.ParentType)
+                .HasMaxLength(20)
+                .IsUnicode(false);
 
             entity.HasOne(d => d.Receiver).WithMany(p => p.MessageReceivers)
                 .HasForeignKey(d => d.ReceiverId)
                 .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK__Messages__Receiv__70DDC3D8");
+                .HasConstraintName("FK__Messages__Receiv__18EBB532");
 
             entity.HasOne(d => d.Sender).WithMany(p => p.MessageSenders)
                 .HasForeignKey(d => d.SenderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Messages__Sender__6FE99F9F");
+                .HasConstraintName("FK__Messages__Sender__17F790F9");
         });
 
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Notifica__3214EC0762231683");
+            entity.HasKey(e => e.Id).HasName("PK__Notifica__3214EC0715DA8A38");
+
+            entity.HasIndex(e => e.CreatedAt, "idx_notifications_created").IsDescending();
+
+            entity.HasIndex(e => e.UserId, "idx_notifications_unread").HasFilter("([IsRead]=(0))");
+
+            entity.HasIndex(e => e.UserId, "idx_notifications_user");
 
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -287,7 +306,7 @@ public partial class DbContextClassName : DbContext
 
             entity.HasOne(d => d.User).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__Notificat__UserI__778AC167");
+                .HasConstraintName("FK__Notificat__UserI__123EB7A3");
         });
 
         modelBuilder.Entity<Todo>(entity =>
