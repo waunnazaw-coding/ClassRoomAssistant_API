@@ -4,7 +4,7 @@ namespace ClassRoomClone_App.Server.Repositories.Interfaces;
 
 public interface ITopicRepository
 {
-    Task<IEnumerable<Topic>> GetAllTopicsAsync(int classId);
+    Task<IEnumerable<Topic>> GetAllTopicsAsync();
     Task<Topic?> GetTopicByIdAsync(int topicId);
     Task<Topic> AddTopicAsync(Topic topic);
     Task<Topic?> UpdateTopicAsync(Topic topic);

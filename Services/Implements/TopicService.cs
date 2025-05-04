@@ -14,9 +14,9 @@ namespace ClassRoomClone_App.Server.Services.Implements
             _topicRepository = topicRepository;
         }
 
-        public async Task<IEnumerable<TopicDto>> GetAllTopicsAsync(int classId)
+        public async Task<IEnumerable<TopicDto>> GetAllTopicsAsync()
         {
-            var topics = await _topicRepository.GetAllTopicsAsync(classId);
+            var topics = await _topicRepository.GetAllTopicsAsync();
             return topics.Select(MapToDto);
         }
 
@@ -34,7 +34,6 @@ namespace ClassRoomClone_App.Server.Services.Implements
             var topic = new Topic
             {
                 Title = createDto.Title,
-                ClassId = createDto.ClassId,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -68,9 +67,9 @@ namespace ClassRoomClone_App.Server.Services.Implements
             {
                 Id = topic.Id,
                 Title = topic.Title,
-                ClassId = topic.ClassId,
                 CreatedAt = topic.CreatedAt
             };
         }
     }
+
 }

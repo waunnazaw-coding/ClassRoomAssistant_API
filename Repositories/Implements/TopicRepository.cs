@@ -13,11 +13,10 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
             _context = context;
         }
 
-        public async Task<IEnumerable<Topic>> GetAllTopicsAsync(int classId)
+        public async Task<IEnumerable<Topic>> GetAllTopicsAsync()
         {
             return await _context.Topics
                 .AsNoTracking()
-                .Where(t => t.ClassId == classId)
                 .ToListAsync();
         }
 
@@ -45,8 +44,7 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 return null;
 
             existing.Title = topic.Title;
-            // Optionally update other fields
-
+            
             await _context.SaveChangesAsync();
 
             return existing;
