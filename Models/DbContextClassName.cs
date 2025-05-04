@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassRoomClone_App.Server.Models;
@@ -20,9 +19,9 @@ public partial class DbContextClassName : DbContext
 
     public virtual DbSet<Assignment> Assignments { get; set; }
 
-    public virtual DbSet<AssignmentFile> AssignmentFiles { get; set; }
-
     public virtual DbSet<AssignmentProgress> AssignmentProgresses { get; set; }
+
+    public virtual DbSet<AssignmentSubmission> AssignmentSubmissions { get; set; }
 
     public virtual DbSet<Attachment> Attachments { get; set; }
 
@@ -40,6 +39,8 @@ public partial class DbContextClassName : DbContext
 
     public virtual DbSet<Notification> Notifications { get; set; }
 
+    public virtual DbSet<SubmissionResponse> SubmissionResponses { get; set; }
+
     public virtual DbSet<Todo> Todos { get; set; }
 
     public virtual DbSet<Topic> Topics { get; set; }
@@ -54,7 +55,6 @@ public partial class DbContextClassName : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        
         modelBuilder.Entity<UserNotificationRawDto>(entity =>
         {
             entity.HasNoKey();
@@ -88,24 +88,6 @@ public partial class DbContextClassName : DbContext
                 .HasConstraintName("FK__Assignmen__Class__534D60F1");
         });
 
-        modelBuilder.Entity<AssignmentFile>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Assignme__3214EC07EC7B824E");
-
-            entity.Property(e => e.FilePath).HasMaxLength(500);
-            entity.Property(e => e.UploadedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-
-            entity.HasOne(d => d.Assignment).WithMany(p => p.AssignmentFiles)
-                .HasForeignKey(d => d.AssignmentId)
-                .HasConstraintName("FK__Assignmen__Assig__571DF1D5");
-
-            entity.HasOne(d => d.Student).WithMany(p => p.AssignmentFiles)
-                .HasForeignKey(d => d.StudentId)
-                .HasConstraintName("FK__Assignmen__Stude__5812160E");
-        });
-
         modelBuilder.Entity<AssignmentProgress>(entity =>
         {
             entity.HasKey(e => e.AssignmentId).HasName("PK__Assignme__32499E77426D5D92");
@@ -129,6 +111,25 @@ public partial class DbContextClassName : DbContext
             entity.HasOne(d => d.ReviewedByNavigation).WithMany(p => p.AssignmentProgressReviewedByNavigations)
                 .HasForeignKey(d => d.ReviewedBy)
                 .HasConstraintName("FK__Assignmen__Revie__5DCAEF64");
+        });
+
+        modelBuilder.Entity<AssignmentSubmission>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Assignme__3214EC078498402E");
+
+            entity.HasIndex(e => new { e.AssignmentId, e.StudentId }, "UQ_Assignment_Student").IsUnique();
+
+            entity.Property(e => e.SubmittedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Assignment).WithMany(p => p.AssignmentSubmissions)
+                .HasForeignKey(d => d.AssignmentId)
+                .HasConstraintName("FK__Assignmen__Assig__1EA48E88");
+
+            entity.HasOne(d => d.Student).WithMany(p => p.AssignmentSubmissions)
+                .HasForeignKey(d => d.StudentId)
+                .HasConstraintName("FK__Assignmen__Stude__1F98B2C1");
         });
 
         modelBuilder.Entity<Attachment>(entity =>
@@ -307,6 +308,24 @@ public partial class DbContextClassName : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Notifications)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__Notificat__UserI__123EB7A3");
+        });
+
+        modelBuilder.Entity<SubmissionResponse>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Submissi__3214EC0757E37220");
+
+            entity.Property(e => e.FileName).HasMaxLength(255);
+            entity.Property(e => e.FilePath).HasMaxLength(500);
+            entity.Property(e => e.Link).HasMaxLength(1000);
+            entity.Property(e => e.MimeType).HasMaxLength(100);
+            entity.Property(e => e.ResponseType).HasMaxLength(20);
+            entity.Property(e => e.UploadedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Submission).WithMany(p => p.SubmissionResponses)
+                .HasForeignKey(d => d.SubmissionId)
+                .HasConstraintName("FK__Submissio__Submi__236943A5");
         });
 
         modelBuilder.Entity<Todo>(entity =>

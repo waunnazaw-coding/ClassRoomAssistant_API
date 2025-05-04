@@ -17,11 +17,11 @@ public partial class User
 
     public string? Profile { get; set; }
 
-    public virtual ICollection<AssignmentFile> AssignmentFiles { get; set; } = new List<AssignmentFile>();
-
     public virtual ICollection<AssignmentProgress> AssignmentProgressGradedByNavigations { get; set; } = new List<AssignmentProgress>();
 
     public virtual ICollection<AssignmentProgress> AssignmentProgressReviewedByNavigations { get; set; } = new List<AssignmentProgress>();
+
+    public virtual ICollection<AssignmentSubmission> AssignmentSubmissions { get; set; } = new List<AssignmentSubmission>();
 
     public virtual ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
 
