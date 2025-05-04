@@ -89,6 +89,26 @@ namespace ClassRoomClone_App.Server.Controllers
                 return BadRequest(new { Message = "Error adding new class", Details = ex.Message });
             }
         }
+        
+        // GET api/classes/code/{classCode}
+        [HttpGet("code/{classCode}")]
+        public async Task<ActionResult<ClassResponseDto>> GetClassByCode(string classCode)
+        {
+            var cls = await _classService.GetClassByCodeAsync(classCode);
+            if (cls == null) return NotFound();
+
+            return Ok(cls);
+        }
+
+        // POST api/classes/code/{classCode}/enroll/{studentId}
+        [HttpPost("code/{classCode}/enroll/{studentId}")]
+        public async Task<IActionResult> EnrollStudent(string classCode, int studentId)
+        {
+            var success = await _classService.EnrollStudentInClassAsync(classCode, studentId);
+            if (!success) return BadRequest("Enrollment failed: class not found or student already enrolled.");
+
+            return Ok(new { Message = "Student enrolled successfully." });
+        }
 
         // PUT: api/classes/{id}
         [HttpPut("{id:int}")]

@@ -54,6 +54,33 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
             await _context.SaveChangesAsync();
             return entity;
         }
+        
+        public async Task<bool> ClassCodeExistsAsync(string classCode)
+        {
+            return await _context.Classes
+                .AsNoTracking()
+                .AnyAsync(c => c.ClassCode == classCode);
+        }
+        
+        public async Task<Class?> GetClassByCodeAsync(string classCode)
+        {
+            return await _context.Classes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.ClassCode == classCode);
+        }
+
+        public async Task<bool> StudentExistsInClassAsync(int classId, int studentId)
+        {
+            return await _context.ClassParticipants
+                .AsNoTracking()
+                .AnyAsync(cp => cp.ClassId == classId && cp.UserId == studentId);
+        }
+        
+        public async Task AddClassParticipantAsync(ClassParticipant participant)
+        {
+            await _context.ClassParticipants.AddAsync(participant);
+            await _context.SaveChangesAsync();
+        }
 
         public async Task<Class?> UpdateClassAsync(Class entity)
         {

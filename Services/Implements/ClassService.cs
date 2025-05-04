@@ -13,7 +13,9 @@ namespace ClassRoomClone_App.Server.Services.Implements
     {
         private readonly IClassRepository _classRepository;
         private readonly IClassParticipantsRepository _participantsRepository;
-
+        private const string AllowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        private const int ClassCodeLength = 6;
+        
         public ClassService(IClassRepository classRepository, IClassParticipantsRepository participantsRepository)
         {
             _classRepository = classRepository;
@@ -72,12 +74,15 @@ namespace ClassRoomClone_App.Server.Services.Implements
 
         public async Task<ClassResponseDto> AddClassAsync(ClassRequestDto requestDto, int userId)
         {
+            string classCode = await GenerateUniqueClassCodeAsync();
+            
             var entity = new Class
             {
                 Name = requestDto.Name,
                 Section = requestDto.Section,
                 Subject = requestDto.Subject,
                 Room = requestDto.Room,
+                ClassCode = classCode,
                 CreatedBy = userId,
                 CreatedDate = DateTime.UtcNow,
                 IsDeleted = false
@@ -89,6 +94,34 @@ namespace ClassRoomClone_App.Server.Services.Implements
             await _participantsRepository.SetMainTeacherAsync(userId, created.Id);
 
             return MapToResponseDto(created);
+        }
+        
+        public async Task<ClassResponseDto?> GetClassByCodeAsync(string classCode)
+        {
+            var cls = await _classRepository.GetClassByCodeAsync(classCode);
+            if (cls == null) return null;
+
+            return MapToResponseDto(cls);
+        }
+        
+        public async Task<bool> EnrollStudentInClassAsync(string classCode, int studentId)
+        {
+            var cls = await _classRepository.GetClassByCodeAsync(classCode);
+            if (cls == null) return false;
+
+            bool alreadyEnrolled = await _classRepository.StudentExistsInClassAsync(cls.Id, studentId);
+            if (alreadyEnrolled) return false;
+
+            var participant = new ClassParticipant
+            {
+                ClassId = cls.Id,
+                UserId = studentId,
+                Role = "Student", // or enum
+                AddedAt = DateTime.UtcNow
+            };
+
+            await _classRepository.AddClassParticipantAsync(participant);
+            return true;
         }
 
         public async Task<ClassResponseDto> UpdateClassAsync(int id, ClassRequestDto requestDto)
@@ -127,5 +160,34 @@ namespace ClassRoomClone_App.Server.Services.Implements
                 CreatedDate = entity.CreatedDate
             };
         }
+        
+        private async Task<string> GenerateUniqueClassCodeAsync()
+        {
+            string code;
+            bool exists;
+
+            do
+            {
+                code = GenerateRandomCode(ClassCodeLength);
+                exists = await _classRepository.ClassCodeExistsAsync(code);
+            } 
+            while (exists);
+
+            return code;
+        }
+
+        private string GenerateRandomCode(int length)
+        {
+            var random = new Random();
+            var chars = new char[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                chars[i] = AllowedChars[random.Next(AllowedChars.Length)];
+            }
+
+            return new string(chars);
+        }
+
     }
 }
