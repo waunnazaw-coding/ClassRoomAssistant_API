@@ -1,9 +1,12 @@
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using ClassRoomClone_App.Server.Repositories.Implements;
 using ClassRoomClone_App.Server.Repositories.Interfaces;
 using ClassRoomClone_App.Server.Services.Implements;
 using ClassRoomClone_App.Server.Services.Interfaces;
-using ClassRoomClone_App.Server.Models; // Ensure you have the correct namespace for DbContext
+using ClassRoomClone_App.Server.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens; // Ensure you have the correct namespace for DbContext
 
 namespace ClassRoomClone_App.Server
 {
@@ -12,6 +15,22 @@ namespace ClassRoomClone_App.Server
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidAudience = builder.Configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                    };
+                });
 
             // Add services to the container.
             builder.Services.AddControllers();
@@ -37,6 +56,7 @@ namespace ClassRoomClone_App.Server
             builder.Services.AddScoped<IAssignmentSubmissionRepository, AssignmentSubmissionRepository>();
             builder.Services.AddScoped<ISubmissionResponseRepository, SubmissionResponseRepository>();
             builder.Services.AddScoped<IGradeRepository, GradeRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
             
             //Register Services
             builder.Services.AddScoped<IClassService, ClassService>();
@@ -50,6 +70,8 @@ namespace ClassRoomClone_App.Server
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IAssignmentSubmissionService, AssignmentSubmissionService>();
             builder.Services.AddScoped<IGradeService, GradeService>();
+            builder.Services.AddScoped<IJwtService, JwtService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
             
             var app = builder.Build();
 
