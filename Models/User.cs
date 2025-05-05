@@ -16,6 +16,10 @@ public partial class User
     public DateTime? CreatedAt { get; set; }
 
     public string? Profile { get; set; }
+    
+    public string? RefreshToken { get; set; }
+    
+    public DateTime? RefreshTokenExpiryTime { get; set; }
 
     public virtual ICollection<AssignmentProgress> AssignmentProgressGradedByNavigations { get; set; } = new List<AssignmentProgress>();
 
