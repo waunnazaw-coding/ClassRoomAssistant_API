@@ -3,11 +3,13 @@ using ClassRoomClone_App.Server.DTOs;
 using ClassRoomClone_App.Server.Services.Interfaces;
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ClassRoomClone_App.Server.Controllers
 {
     [ApiController]
     [Route("api/classes/{classId:int}/announcements")]
+    [Authorize(Policy = "TeacherOrSubTeacher")]
     public class AnnouncementsController : ControllerBase
     {
         private readonly IAnnouncementService _announcementService;
@@ -33,6 +35,7 @@ namespace ClassRoomClone_App.Server.Controllers
 
         // POST: api/classes/{classId}/announcements
         [HttpPost]
+        
         public async Task<ActionResult<AnnouncementResponseDto>> CreateAnnouncement(
             [FromRoute] int classId,
             [FromBody] AnnouncementCreateRequestDto dto)
