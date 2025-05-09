@@ -145,5 +145,14 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
 
             return true;
         }
+        
+        public async Task<string?> GetUserRoleInClassAsync(int userId, int classId)
+        {
+            var participant = await _context.ClassParticipants
+                .AsNoTracking()
+                .FirstOrDefaultAsync(cp => cp.UserId == userId && cp.ClassId == classId);
+
+            return participant?.Role;
+        }
     }
 }

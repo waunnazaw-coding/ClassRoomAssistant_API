@@ -24,5 +24,7 @@ namespace ClassRoomClone_App.Server.Repositories.Interfaces
         Task<ClassParticipant> AddStudentAsync(int userId, int classId);
         
         Task<List<int>> GetStudentUserIdsByClassIdAsync(int classId);
+        
+        Task<string?> GetUserRoleInClassAsync(int userId, int classId);
     }
 }
