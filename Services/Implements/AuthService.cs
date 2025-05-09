@@ -95,7 +95,11 @@ namespace ClassRoomClone_App.Server.Services.Implements
             return new AuthResponseDto
             {
                 AccessToken = accessToken,
-                RefreshToken = refreshToken
+                RefreshToken = refreshToken,
+                Name = user.Name,
+                Email = user.Email,
+                Profile = user.Profile,
+                Id = user.Id
             };
         }
     }
