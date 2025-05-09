@@ -7,6 +7,7 @@ namespace ClassRoomClone_App.Server.Repositories.Interfaces
     public interface IClassRepository
     {
         Task<IEnumerable<Class>> GetAllClassesAsync();
+        Task<IEnumerable<UserClassesRawDto>> GetClassesByUserId(int userId);
         Task<IEnumerable<Class>> GetArchivedClassesAsync();
         Task<Class?> GetClassByIdAsync(int id);
         Task<Class?> GetClassDetailsAsync(int id);

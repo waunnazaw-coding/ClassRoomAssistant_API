@@ -34,6 +34,11 @@ namespace ClassRoomClone_App.Server.Services.Implements
             return classes.Select(MapToResponseDto);
         }
 
+        public async Task<IEnumerable<UserClassesRawDto>> GetClassesByUserId(int userId)
+        {
+            return  await _classRepository.GetClassesByUserId(userId);
+        }
+
         public async Task<ClassResponseDto> GetClassByIdAsync(int id)
         {
             var entity = await _classRepository.GetClassByIdAsync(id);
@@ -153,6 +158,7 @@ namespace ClassRoomClone_App.Server.Services.Implements
             {
                 Id = entity.Id,
                 Name = entity.Name,
+                ClassCode = entity.ClassCode,
                 Section = entity.Section,
                 Subject = entity.Subject,
                 Room = entity.Room,

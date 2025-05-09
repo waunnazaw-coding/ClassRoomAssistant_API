@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using ClassRoomClone_App.Server.Models;
 
 namespace ClassRoomClone_App.Server.Controllers
 {
@@ -26,6 +27,14 @@ namespace ClassRoomClone_App.Server.Controllers
             return Ok(classes);
         }
 
+        // GET: api/classes/user/userId
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<List<UserClassesRawDto>>> GetUserClasses(int userId)
+        {
+            var classes = await _classService.GetClassesByUserId(userId);
+            return Ok(classes);
+        }
+        
         // GET: api/classes/archived
         [HttpGet("archived")]
         public async Task<ActionResult<IEnumerable<ClassResponseDto>>> GetArchivedClasses()
@@ -80,7 +89,7 @@ namespace ClassRoomClone_App.Server.Controllers
                 // TODO: Replace with actual authenticated user ID
                 int userId = 1;
 
-                var createdClass = await _classService.AddClassAsync(classRequestDto, userId);
+                var createdClass = await _classService.AddClassAsync(classRequestDto, classRequestDto.UserId);
 
                 return CreatedAtAction(nameof(GetClassById), new { id = createdClass.Id }, createdClass);
             }

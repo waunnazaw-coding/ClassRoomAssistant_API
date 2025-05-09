@@ -24,6 +24,13 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<UserClassesRawDto>> GetClassesByUserId(int userId)
+        {
+            return await _context.UserClassesRawDtos
+                .FromSqlInterpolated($@"EXEC GetClassesUserId @UserId  = {userId}")
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Class>> GetArchivedClassesAsync()
         {
             return await _context.Classes
