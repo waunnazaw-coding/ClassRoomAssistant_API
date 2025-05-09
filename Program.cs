@@ -1,4 +1,5 @@
 using System.Text;
+using ClassRoomClone_App.Server.CustomAuthorization;
 using Microsoft.EntityFrameworkCore;
 using ClassRoomClone_App.Server.Repositories.Implements;
 using ClassRoomClone_App.Server.Repositories.Interfaces;
@@ -6,7 +7,8 @@ using ClassRoomClone_App.Server.Services.Implements;
 using ClassRoomClone_App.Server.Services.Interfaces;
 using ClassRoomClone_App.Server.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens; // Ensure you have the correct namespace for DbContext
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ClassRoomClone_App.Server
 {
@@ -15,7 +17,19 @@ namespace ClassRoomClone_App.Server
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
+
+            // CORS Configuration
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend",
+                    policy => policy
+                        .WithOrigins("http://localhost:5174") // Frontend origin
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials()
+                );
+            });
+
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -31,6 +45,22 @@ namespace ClassRoomClone_App.Server
                             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
                     };
                 });
+
+            builder.Services.AddHttpContextAccessor();
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("TeacherOrSubTeacher", policy =>
+                    policy.Requirements.Add(new ClassRoleRequirement("Teacher", "SubTeacher")));
+
+                options.AddPolicy("TeacherOnly", policy =>
+                    policy.Requirements.Add(new ClassRoleRequirement("Teacher")));
+
+                options.AddPolicy("StudentOnly", policy =>
+                    policy.Requirements.Add(new ClassRoleRequirement("Student")));
+            });
+
+            builder.Services.AddScoped<IAuthorizationHandler, ClassRoleHandler>();
 
             // Add services to the container.
             builder.Services.AddControllers();
@@ -57,8 +87,8 @@ namespace ClassRoomClone_App.Server
             builder.Services.AddScoped<ISubmissionResponseRepository, SubmissionResponseRepository>();
             builder.Services.AddScoped<IGradeRepository, GradeRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
-            
-            //Register Services
+
+            // Register Services
             builder.Services.AddScoped<IClassService, ClassService>();
             builder.Services.AddScoped<ITopicService, TopicService>();
             builder.Services.AddScoped<IClassParticipantsService, ClassParticipantsService>();
@@ -72,13 +102,12 @@ namespace ClassRoomClone_App.Server
             builder.Services.AddScoped<IGradeService, GradeService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
-            
+
             var app = builder.Build();
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -86,7 +115,15 @@ namespace ClassRoomClone_App.Server
             }
 
             app.UseHttpsRedirection();
+
+            // --- FIX: Correct Middleware Order for CORS ---
+            app.UseRouting(); // Needed for endpoint routing
+
+            app.UseCors("AllowFrontend"); // CORS must be here, after UseRouting and before Auth
+
+            app.UseAuthentication();
             app.UseAuthorization();
+
             app.MapControllers();
             app.MapFallbackToFile("/index.html");
 
