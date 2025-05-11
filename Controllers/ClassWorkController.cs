@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClassRoomClone_App.Server.Controllers
 {
-    [Route("api/classes/{classId:int}/class-works")]
+    [Route("api/classes/{classId:int}/")]
     public class ClassWorkController : ControllerBase
     {
         private readonly IClassWorkService _classWorkService;
