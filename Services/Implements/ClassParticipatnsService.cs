@@ -76,7 +76,7 @@ namespace ClassRoomClone_App.Server.Services.Implements
 
             return new ClassParticipantResponseDto
             {
-                //UserId = model.UserId,
+                UserId = model.UserId,
                 UserName = user?.Name ?? "Unknown",
                 Email = user?.Email ?? "Unknown",
                 Role = model.Role,
@@ -92,7 +92,7 @@ namespace ClassRoomClone_App.Server.Services.Implements
 
             return new ClassParticipantResponseDto
             {
-                //UserId = model.UserId,
+                UserId = user.Id,
                 UserName = user?.Name ?? "Unknown",
                 Email = user?.Email ?? "Unknown",
                 Role = model.Role,

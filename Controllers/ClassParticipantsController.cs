@@ -87,6 +87,7 @@ namespace ClassRoomClone_App.Server.Controllers
             return CreatedAtAction(nameof(GetAllParticipants), new { classId }, participant);
         }
 
+        //Leave from Class
         // DELETE: api/classes/{classId}/participants/students/{userId}
         [HttpDelete("students/{userId:int}")]
         public async Task<IActionResult> RemoveStudent(int classId, int userId)
