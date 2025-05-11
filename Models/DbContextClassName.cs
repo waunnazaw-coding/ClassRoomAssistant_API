@@ -76,7 +76,7 @@ public partial class DbContextClassName : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.Title).HasMaxLength(255);
+            entity.Property(e => e.Message).HasMaxLength(255);
 
             entity.HasOne(d => d.Class).WithMany(p => p.Announcements)
                 .HasForeignKey(d => d.ClassId)

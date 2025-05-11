@@ -23,7 +23,6 @@ public class AnnouncementRepository : IAnnouncementRepository
             .Select(a => new AnnouncementWithMessagesDto
             {
                 AnnouncementId = a.Id,
-                Title = a.Title,
                 AnnouncementMessage = a.Message,
                 AnnouncementCreatedAt = a.CreatedAt,
                 Messages = _context.Messages

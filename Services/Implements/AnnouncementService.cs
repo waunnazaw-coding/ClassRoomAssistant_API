@@ -36,7 +36,6 @@ public class AnnouncementService : IAnnouncementService
         {
             Id = a.Id,
             ClassId = a.ClassId,
-            Title = a.Title,
             Message = a.Message,
             CreatedAt = a.CreatedAt
         }).ToList();
@@ -49,7 +48,6 @@ public class AnnouncementService : IAnnouncementService
         var announcement = new Announcement
         {
             ClassId = dto.ClassId,
-            Title = dto.Title,
             Message = dto.Message,
             CreatedAt = DateTime.UtcNow
         };
@@ -75,7 +73,6 @@ public class AnnouncementService : IAnnouncementService
         {
             Id = announcement.Id,
             ClassId = announcement.ClassId,
-            Title = announcement.Title,
             Message = announcement.Message,
             CreatedAt = announcement.CreatedAt
         };
@@ -86,8 +83,7 @@ public class AnnouncementService : IAnnouncementService
         var announcement = await _announcementRepo.GetByIdAsync(id);
         if (announcement == null)
             throw new KeyNotFoundException("Announcement not found");
-
-        announcement.Title = dto.Title;
+        
         announcement.Message = dto.Message;
 
         await _announcementRepo.UpdateAsync(announcement);
