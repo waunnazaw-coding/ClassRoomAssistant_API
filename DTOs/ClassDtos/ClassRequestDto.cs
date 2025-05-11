@@ -1,6 +1,5 @@
 ﻿namespace ClassRoomClone_App.Server.DTOs;
 
-// Request DTO used for creating or updating a class
 public class ClassRequestDto
 {
     public int UserId { get; set; }
