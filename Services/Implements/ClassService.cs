@@ -71,6 +71,7 @@ namespace ClassRoomClone_App.Server.Services.Implements
                 Section = entity.Section,
                 Subject = entity.Subject,
                 Room = entity.Room,
+                ClassCode = entity.ClassCode,
                 CreatedBy = entity.CreatedBy,
                 CreatedDate = entity.CreatedDate,
                 Participants = participants
@@ -129,7 +130,7 @@ namespace ClassRoomClone_App.Server.Services.Implements
             return true;
         }
 
-        public async Task<ClassResponseDto> UpdateClassAsync(int id, ClassRequestDto requestDto)
+        public async Task<ClassResponseDto> UpdateClassAsync(int id, ClassUpdateRequestDto requestDto)
         {
             var entity = new Class
             {
@@ -151,6 +152,18 @@ namespace ClassRoomClone_App.Server.Services.Implements
         {
             return await _classRepository.DeleteAsync(id);
         }
+        
+        
+        public async Task<bool> RestoreAsync(int id)
+        {
+            return await _classRepository.RestoreAsync(id);
+        }
+
+        public async Task<bool> ActualDeleteAsync(int id)
+        {
+            return await _classRepository.ActualDeleteAsync(id);
+        }
+
 
         private static ClassResponseDto MapToResponseDto(Class entity)
         {

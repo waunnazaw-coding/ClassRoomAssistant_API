@@ -9,9 +9,10 @@ public class UserClassesRawDto
     public string Name { get; set; }
     public string? Section { get; set; }
     public string? Subject { get; set; }
-    
+    public string Role { get; set; } = null!;
     public string ClassCode { get; set; } 
     public string? Room { get; set; }
     public int? CreatedBy { get; set; }
+    public bool? IsDeleted { get; set; }
     public DateTime? CreatedDate { get; set; }
 }

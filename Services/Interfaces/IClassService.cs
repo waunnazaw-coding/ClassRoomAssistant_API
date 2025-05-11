@@ -15,7 +15,9 @@ namespace ClassRoomClone_App.Server.Services.Interfaces
         Task<ClassResponseDto> AddClassAsync(ClassRequestDto requestDto, int userId);
         Task<ClassResponseDto?> GetClassByCodeAsync(string classCode);
         Task<bool> EnrollStudentInClassAsync(string classCode, int studentId);
-        Task<ClassResponseDto> UpdateClassAsync(int id, ClassRequestDto requestDto);
+        Task<ClassResponseDto> UpdateClassAsync(int id, ClassUpdateRequestDto requestDto);
         Task<bool> DeleteAsync(int id);
+        Task<bool> RestoreAsync(int id);
+        Task<bool> ActualDeleteAsync(int id);
     }
 }

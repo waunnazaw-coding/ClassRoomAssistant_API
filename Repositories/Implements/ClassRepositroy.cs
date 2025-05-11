@@ -114,5 +114,28 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
             await _context.SaveChangesAsync();
             return true;
         }
+        
+        public async Task<bool> RestoreAsync(int id)
+        {
+            var entity = await _context.Classes.FindAsync(id);
+            if (entity == null )
+                return false;
+
+            entity.IsDeleted = false;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        
+        public async Task<bool> ActualDeleteAsync(int id)
+        {
+            var entity = await _context.Classes.FindAsync(id);
+            if (entity == null )
+                return false;
+
+             _context.Classes.Remove(entity);
+             
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }
