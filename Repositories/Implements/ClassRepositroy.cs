@@ -2,18 +2,23 @@
 using ClassRoomClone_App.Server.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using ClassRoomClone_App.Server.DTOs;
+using Microsoft.Data.SqlClient;
 
 namespace ClassRoomClone_App.Server.Repositories.Implements
 {
     public class ClassRepository : IClassRepository
     {
+        private readonly string _connectionString ;
         private readonly DbContextClassName _context;
 
-        public ClassRepository(DbContextClassName context)
+        public ClassRepository(DbContextClassName context , IConfiguration configuration)
         {
             _context = context;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         public async Task<IEnumerable<Class>> GetAllClassesAsync()
@@ -46,13 +51,44 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 .FirstOrDefaultAsync(c => c.Id == id && c.IsDeleted == false);
         }
 
-        public async Task<Class?> GetClassDetailsAsync(int id)
+        public async Task<List<ClassDetailDto>> GetClassDetailsAsync(int classId)
         {
-            return await _context.Classes
-                .AsNoTracking()
-                .Include(c => c.ClassParticipants)
-                    .ThenInclude(cp => cp.User)
-                .FirstOrDefaultAsync(c => c.Id == id && c.IsDeleted == false);
+            var results = new List<ClassDetailDto>();
+
+            using (var conn = new SqlConnection(_connectionString)) 
+            using (var cmd = new SqlCommand("GetClassDetails", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@ClassId", SqlDbType.Int) { Value = classId });
+
+                await conn.OpenAsync();
+
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var detail = new ClassDetailDto
+                        {
+                            EntityId = reader.GetInt32(reader.GetOrdinal("EntityId")),
+                            EntityType = reader.GetString(reader.GetOrdinal("EntityType")),
+                            Content = reader.IsDBNull(reader.GetOrdinal("Content")) ? null : reader.GetString(reader.GetOrdinal("Content")),
+                            ActivityDate = reader.GetDateTime(reader.GetOrdinal("ActivityDate")),
+                            MessageId = reader.IsDBNull(reader.GetOrdinal("MessageId")) ? (int?)null : reader.GetInt32(reader.GetOrdinal("MessageId")),
+                            SenderId = reader.IsDBNull(reader.GetOrdinal("SenderId")) ? (int?)null : reader.GetInt32(reader.GetOrdinal("SenderId")),
+                            ReceiverId = reader.IsDBNull(reader.GetOrdinal("ReceiverId")) ? (int?)null : reader.GetInt32(reader.GetOrdinal("ReceiverId")),
+                            MessageContent = reader.IsDBNull(reader.GetOrdinal("MessageContent")) ? null : reader.GetString(reader.GetOrdinal("MessageContent")),
+                            MessageCreatedAt = reader.IsDBNull(reader.GetOrdinal("MessageCreatedAt")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("MessageCreatedAt"))
+                        };
+
+                        results.Add(detail);
+                    }
+                }
+                
+                conn.Close();
+            }
+
+            return results;
+        
         }
 
         public async Task<Class> AddClassAsync(Class entity)

@@ -1,6 +1,7 @@
 ﻿using ClassRoomClone_App.Server.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ClassRoomClone_App.Server.DTOs;
 
 namespace ClassRoomClone_App.Server.Repositories.Interfaces
 {
@@ -10,7 +11,7 @@ namespace ClassRoomClone_App.Server.Repositories.Interfaces
         Task<IEnumerable<UserClassesRawDto>> GetClassesByUserId(int userId);
         Task<IEnumerable<Class>> GetArchivedClassesAsync();
         Task<Class?> GetClassByIdAsync(int id);
-        Task<Class?> GetClassDetailsAsync(int id);
+        Task<List<ClassDetailDto>> GetClassDetailsAsync(int id);
         Task<Class> AddClassAsync(Class entity);
         Task<Class?> UpdateClassAsync(Class entity);
         Task<bool> DeleteAsync(int id);

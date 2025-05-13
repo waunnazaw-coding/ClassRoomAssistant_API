@@ -48,36 +48,15 @@ namespace ClassRoomClone_App.Server.Services.Implements
             return MapToResponseDto(entity);
         }
 
-        public async Task<ClassDetailsResponseDto> GetClassDetailsAsync(int id)
+        public async Task<GetClassDetailsResponse> GetClassDetailsAsync(int classId)
         {
-            var entity = await _classRepository.GetClassDetailsAsync(id);
-            if (entity == null)
-                throw new KeyNotFoundException($"Class with ID {id} not found.");
+            var details = await _classRepository.GetClassDetailsAsync(classId);
 
-            var participants = entity.ClassParticipants.Select(cp => new ClassParticipantResponseDto
+            return new GetClassDetailsResponse
             {
-                UserId = cp.UserId,
-                UserName = cp.User.Name,
-                Email = cp.User.Email,
-                Role = cp.Role,
-                IsOwner = cp.IsOwner,
-                AddedAt = cp.AddedAt
-            }).ToList();
-
-            return new ClassDetailsResponseDto
-            {
-                Id = entity.Id,
-                Name = entity.Name,
-                Section = entity.Section,
-                Subject = entity.Subject,
-                Room = entity.Room,
-                ClassCode = entity.ClassCode,
-                CreatedBy = entity.CreatedBy,
-                CreatedDate = entity.CreatedDate,
-                Participants = participants
+                Details = details
             };
         }
-
         public async Task<ClassResponseDto> AddClassAsync(ClassRequestDto requestDto, int userId)
         {
             string classCode = await GenerateUniqueClassCodeAsync();
