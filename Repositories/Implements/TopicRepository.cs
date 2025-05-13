@@ -13,10 +13,11 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
             _context = context;
         }
 
-        public async Task<IEnumerable<Topic>> GetAllTopicsAsync()
+        public async Task<IEnumerable<Topic>> GetAllTopicsAsync(int userId)
         {
             return await _context.Topics
                 .AsNoTracking()
+                .Where(t => t.UserId == userId)
                 .ToListAsync();
         }
 
@@ -29,7 +30,6 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
 
         public async Task<Topic> AddTopicAsync(Topic topic)
         {
-            topic.CreatedAt = DateTime.UtcNow;
 
             await _context.Topics.AddAsync(topic);
             await _context.SaveChangesAsync();

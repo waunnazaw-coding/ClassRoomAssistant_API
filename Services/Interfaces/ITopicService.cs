@@ -4,7 +4,7 @@ namespace ClassRoomClone_App.Server.Services.Interfaces
 {
     public interface ITopicService
     {
-        Task<IEnumerable<TopicDto>> GetAllTopicsAsync();
+        Task<IEnumerable<TopicDto>> GetAllTopicsAsync(int userId);
         Task<TopicDto> GetTopicByIdAsync(int topicId);
         Task<TopicDto> CreateTopicAsync(CreateTopicDto createDto);
         Task<TopicDto> UpdateTopicAsync(int topicId, UpdateTopicDto updateDto);

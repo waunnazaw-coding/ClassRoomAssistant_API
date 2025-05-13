@@ -3,5 +3,6 @@
 public class CreateTopicDto
 {
     public string Title { get; set; } = null!;
-    public int ClassId { get; set; }
+
+    public int UserId { get; set; }
 }

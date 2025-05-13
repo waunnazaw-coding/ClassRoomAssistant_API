@@ -17,9 +17,9 @@ public class TopicsController : ControllerBase
 
     // GET: api/topics
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TopicDto>>> GetAllTopics()
+    public async Task<ActionResult<IEnumerable<TopicDto>>> GetAllTopics(int userId)
     {
-        var topics = await _topicService.GetAllTopicsAsync();
+        var topics = await _topicService.GetAllTopicsAsync( userId);
         return Ok(topics);
     }
 
