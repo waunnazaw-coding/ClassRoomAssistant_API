@@ -9,4 +9,5 @@ public class CreateAssignmentRequestDto
     public string? Instructions { get; set; }
     public int? Points { get; set; }
     public DateTime? DueDate { get; set; }
+    public List<AttachmentCreateDto> Attachments { get; set; } = new();
 }

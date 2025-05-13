@@ -8,6 +8,7 @@ public class AssignmentService : IAssignmentService
 {
     private readonly IAssignmentRepository _repository;
     private readonly IToDoRepository _todoRepo;
+    private readonly IAttachmentRepository _attachmentRepo;
     private readonly INotificationRepository _notificationRepo;
     private readonly IClassParticipantsRepository _classParticipantsRepo;
     private readonly IClassWorkRepository _classWorkRepo;
@@ -17,6 +18,7 @@ public class AssignmentService : IAssignmentService
         IClassWorkRepository classWorkRepo,
         IAssignmentRepository assignmentRepo,
         IToDoRepository todoRepo,
+        IAttachmentRepository attachmentRepo,
         INotificationRepository notificationRepo,
         IClassParticipantsRepository classParticipantsRepo,
         DbContextClassName context)
@@ -84,6 +86,19 @@ public class AssignmentService : IAssignmentService
             DueDate = request.DueDate
         };
         assignment = await _repository.AddAsync(assignment);
+        
+        var attachments = request.Attachments.Select(a => new Attachment
+        {
+            ReferenceId = assignment.Id,
+            ReferenceType = "Material",
+            FileType = a.FileType,
+            FilePath = a.FilePath,
+            FileUrl = a.FileUrl,
+            //CreatedBy = request.CreatedBy,
+            CreatedAt = DateTime.UtcNow
+        }).ToList();
+
+        await _attachmentRepo.AddRangeAsync(attachments);
 
         // 3. Get all student UserIds from ClassParticipants
         var studentUserIds = await _classParticipantsRepo.GetStudentUserIdsByClassIdAsync(request.ClassId);
