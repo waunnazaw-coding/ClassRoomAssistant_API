@@ -8,6 +8,7 @@ public class AssignmentService : IAssignmentService
 {
     private readonly IAssignmentRepository _repository;
     private readonly IToDoRepository _todoRepo;
+    private readonly INotificationRepository _notificationRepo;
     private readonly IClassParticipantsRepository _classParticipantsRepo;
     private readonly IClassWorkRepository _classWorkRepo;
     private readonly DbContextClassName _context;
@@ -16,6 +17,7 @@ public class AssignmentService : IAssignmentService
         IClassWorkRepository classWorkRepo,
         IAssignmentRepository assignmentRepo,
         IToDoRepository todoRepo,
+        INotificationRepository notificationRepo,
         IClassParticipantsRepository classParticipantsRepo,
         DbContextClassName context)
     {
@@ -24,6 +26,7 @@ public class AssignmentService : IAssignmentService
         _todoRepo = todoRepo;
         _classParticipantsRepo = classParticipantsRepo;
         _context = context;
+        _notificationRepo = notificationRepo;
     }
     public async Task<IEnumerable<AssignmentResponseDto>> GetAllAsync(int classWorkId)
     {
@@ -97,6 +100,17 @@ public class AssignmentService : IAssignmentService
 
         // 5. Bulk insert Todos
         await _todoRepo.BulkAddTodosAsync(todos);
+        
+        var notifications = studentUserIds.Select(userId => new Notification
+        {
+            UserId = userId,
+            Type = "Assignement",
+            ReferenceId = assignment.Id,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _notificationRepo.AddRangeAsync(notifications);
+        
 
         // 6. Return response DTO
         return new AssignmentResponseDto
