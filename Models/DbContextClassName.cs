@@ -364,10 +364,7 @@ public partial class DbContextClassName : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.Title).HasMaxLength(255);
-
-            entity.HasOne(d => d.Class).WithMany(p => p.Topics)
-                .HasForeignKey(d => d.ClassId)
-                .HasConstraintName("FK__Topics__ClassId__49C3F6B7");
+            
         });
 
         modelBuilder.Entity<User>(entity =>
