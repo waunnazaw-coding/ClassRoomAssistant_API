@@ -10,12 +10,16 @@ public class MaterialService : IMaterialService
     private readonly IClassWorkRepository _classWorkRepo;
     private readonly IMaterialRepository _materialRepo;
     private readonly IAttachmentRepository _attachmentRepo;
+    private readonly INotificationRepository _notificationRepo;
+    private readonly IClassParticipantsRepository _classParticipantsRepo;
     private readonly DbContextClassName _context;
 
     public MaterialService(
         IClassWorkRepository classWorkRepo,
         IMaterialRepository materialRepo,
         IAttachmentRepository attachmentRepo,
+        INotificationRepository notificationRepo,
+        IClassParticipantsRepository classParticipantsRepo,
         DbContextClassName context)
     {
         _classWorkRepo = classWorkRepo;
@@ -80,12 +84,25 @@ public class MaterialService : IMaterialService
                 ReferenceId = material.Id,
                 ReferenceType = "Material",
                 FileType = a.FileType,
+                FilePath = a.FilePath,
                 FileUrl = a.FileUrl,
                 CreatedBy = request.CreatedBy,
                 CreatedAt = DateTime.UtcNow
             }).ToList();
 
             await _attachmentRepo.AddRangeAsync(attachments);
+            
+            var studentUserIds = await _classParticipantsRepo.GetStudentUserIdsByClassIdAsync(request.ClassId);
+            
+            var notifications = studentUserIds.Select(userId => new Notification
+            {
+                UserId = userId,
+                Type = "Materail",
+                ReferenceId = material.Id,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            });
+            await _notificationRepo.AddRangeAsync(notifications);
 
             await transaction.CommitAsync();
 
@@ -98,7 +115,8 @@ public class MaterialService : IMaterialService
                 {
                     Id = a.Id,
                     FileType = a.FileType,
-                    FileUrl = a.FileUrl
+                    FileUrl = a.FileUrl,
+                    FilePath = a.FilePath,
                 }).ToList()
             };
         }
