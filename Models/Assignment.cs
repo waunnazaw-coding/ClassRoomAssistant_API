@@ -19,6 +19,8 @@ public partial class Assignment
 
     public bool? AllowLateSubmission { get; set; }
 
+    public int? CreatedBy { get; set; }
+
     public virtual AssignmentProgress? AssignmentProgress { get; set; }
 
     public virtual ICollection<AssignmentSubmission> AssignmentSubmissions { get; set; } = new List<AssignmentSubmission>();
