@@ -57,6 +57,7 @@ public partial class DbContextClassName : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        
         modelBuilder.Entity<UserNotificationRawDto>(entity =>
         {
             entity.HasNoKey();
@@ -68,7 +69,6 @@ public partial class DbContextClassName : DbContext
             entity.HasNoKey();
             entity.ToView(null);
         });
-        
         modelBuilder.Entity<Announcement>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Announce__3214EC07E2CAF7DF");
@@ -76,7 +76,6 @@ public partial class DbContextClassName : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.Message).HasMaxLength(255);
 
             entity.HasOne(d => d.Class).WithMany(p => p.Announcements)
                 .HasForeignKey(d => d.ClassId)
@@ -142,7 +141,7 @@ public partial class DbContextClassName : DbContext
 
         modelBuilder.Entity<Attachment>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Attachme__3214EC0761B3A42D");
+            entity.HasKey(e => e.Id).HasName("PK__Attachme__3214EC075C7716CC");
 
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -155,10 +154,6 @@ public partial class DbContextClassName : DbContext
             entity.Property(e => e.ReferenceType)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Attachments)
-                .HasForeignKey(d => d.CreatedBy)
-                .HasConstraintName("FK__Attachmen__Creat__68487DD7");
         });
 
         modelBuilder.Entity<Class>(entity =>
@@ -175,11 +170,6 @@ public partial class DbContextClassName : DbContext
             entity.Property(e => e.Room).HasMaxLength(50);
             entity.Property(e => e.Section).HasMaxLength(100);
             entity.Property(e => e.Subject).HasMaxLength(255);
-
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Classes)
-                .HasForeignKey(d => d.CreatedBy)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("FK__Classes__Created__3C69FB99");
         });
 
         modelBuilder.Entity<ClassParticipant>(entity =>
@@ -320,20 +310,19 @@ public partial class DbContextClassName : DbContext
 
         modelBuilder.Entity<SubmissionResponse>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Submissi__3214EC0757E37220");
+            entity.HasKey(e => e.Id).HasName("PK__Submissi__3214EC07791B5203");
 
-            entity.Property(e => e.FileName).HasMaxLength(255);
             entity.Property(e => e.FilePath).HasMaxLength(500);
+            entity.Property(e => e.FileType).HasMaxLength(20);
             entity.Property(e => e.Link).HasMaxLength(1000);
-            entity.Property(e => e.MimeType).HasMaxLength(100);
-            entity.Property(e => e.ResponseType).HasMaxLength(20);
+            entity.Property(e => e.Link).HasMaxLength(500);
             entity.Property(e => e.UploadedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
 
             entity.HasOne(d => d.Submission).WithMany(p => p.SubmissionResponses)
                 .HasForeignKey(d => d.SubmissionId)
-                .HasConstraintName("FK__Submissio__Submi__236943A5");
+                .HasConstraintName("FK__Submissio__Submi__367C1819");
         });
 
         modelBuilder.Entity<Todo>(entity =>
@@ -364,7 +353,6 @@ public partial class DbContextClassName : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.Title).HasMaxLength(255);
-            
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -379,6 +367,8 @@ public partial class DbContextClassName : DbContext
             entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.Name).HasMaxLength(255);
             entity.Property(e => e.PasswordHash).HasMaxLength(255);
+            entity.Property(e => e.RefreshToken).HasMaxLength(255);
+            entity.Property(e => e.RefreshTokenExpiryTime).HasColumnType("datetime");
         });
 
         OnModelCreatingPartial(modelBuilder);

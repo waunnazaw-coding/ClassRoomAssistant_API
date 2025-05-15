@@ -7,7 +7,7 @@ public class UserNotificationRawDto
     public int ReferenceId { get; set; }
     public bool IsRead { get; set; }
     public DateTime? CreatedAt { get; set; }
-    public string? AnnouncementTitle { get; set; }
+    public string? AnnouncementMessage { get; set; }
     public string? MessageContent { get; set; }
     public string? AssignmentTitle { get; set; }
     public string? MaterialTitle { get; set; }

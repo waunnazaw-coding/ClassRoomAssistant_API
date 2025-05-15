@@ -19,6 +19,7 @@ public class NotificationRepository : INotificationRepository
             .FromSqlInterpolated($@"EXEC GetUserNotifications @TargetUserId = {userId}")
             .ToListAsync();
     }
+    
     public async Task AddRangeAsync(IEnumerable<Notification> notifications)
     {
         await _context.Notifications.AddRangeAsync(notifications);
@@ -55,5 +56,10 @@ public class NotificationRepository : INotificationRepository
         var notifications = _context.Notifications.Where(n => n.Type == type && n.ReferenceId == referenceId);
         _context.Notifications.RemoveRange(notifications);
         await _context.SaveChangesAsync();
+    }
+
+    public Task SaveChangesAsync()
+    {
+        throw new NotImplementedException();
     }
 }

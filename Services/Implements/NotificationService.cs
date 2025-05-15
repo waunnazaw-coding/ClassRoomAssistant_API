@@ -22,7 +22,7 @@ public class NotificationService : INotificationService
             CreatedAt = n.CreatedAt,
             Details = n.Type switch
             {
-                "Announcement" => n.AnnouncementTitle ?? "N/A",
+                "Announcement" => n.AnnouncementMessage ?? "N/A",
                 "Message" => n.MessageContent ?? "N/A",
                 "Assignment" => n.AssignmentTitle ?? "N/A",
                 "Material" => n.MaterialTitle ?? "N/A",

@@ -16,9 +16,9 @@ public partial class User
     public DateTime? CreatedAt { get; set; }
 
     public string? Profile { get; set; }
-    
+
     public string? RefreshToken { get; set; }
-    
+
     public DateTime? RefreshTokenExpiryTime { get; set; }
 
     public virtual ICollection<AssignmentProgress> AssignmentProgressGradedByNavigations { get; set; } = new List<AssignmentProgress>();
@@ -27,13 +27,9 @@ public partial class User
 
     public virtual ICollection<AssignmentSubmission> AssignmentSubmissions { get; set; } = new List<AssignmentSubmission>();
 
-    public virtual ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
-
     public virtual ICollection<ClassParticipant> ClassParticipantAddedByNavigations { get; set; } = new List<ClassParticipant>();
 
     public virtual ICollection<ClassParticipant> ClassParticipantUsers { get; set; } = new List<ClassParticipant>();
-
-    public virtual ICollection<Class> Classes { get; set; } = new List<Class>();
 
     public virtual ICollection<Grade> GradeGradedByNavigations { get; set; } = new List<Grade>();
 

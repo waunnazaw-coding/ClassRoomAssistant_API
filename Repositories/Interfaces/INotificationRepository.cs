@@ -9,4 +9,5 @@ public interface INotificationRepository
     Task<bool> MarkNotificationAsReadAsync(int notificationId);
     Task<int> MarkMultiNotificationsAsReadAsync(List<int> notificationIds);
     Task DeleteByReferenceAsync(string type, int referenceId);
+    Task SaveChangesAsync();
 }
