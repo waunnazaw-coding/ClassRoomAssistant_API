@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 
 namespace ClassRoomClone_App.Server.Services.Implements
 {
@@ -26,6 +27,54 @@ namespace ClassRoomClone_App.Server.Services.Implements
             var participants = await _participantsRepository.GetAllParticipantsAsync(classId);
             return participants.Select(MapToDto);
         }
+        
+        public async Task AddSubTeacherToClassAsync(int teacherUserId, int classId, string email)
+        {
+            var sql = "EXEC AddSubTeacherToClass @TeacherUserId, @ClassId, @EmailToAdd";
+
+            var parameters = new[]
+            {
+                new SqlParameter("@TeacherUserId", teacherUserId),
+                new SqlParameter("@ClassId", classId),
+                new SqlParameter("@EmailToAdd", email)
+            };
+
+            try
+            {
+                await _context.Database.ExecuteSqlRawAsync(sql, parameters);
+            }
+            catch (SqlException ex)
+            {
+                // Handle SQL errors here, ex.Message contains the RAISERROR message
+                throw new ApplicationException(ex.Message);
+            }
+
+        }
+
+        
+        public async Task AddStudentToClassAsync(int teacherUserId, int classId, string email)
+        {
+            var sql = "EXEC AddStudentToClass @TeacherUserId, @ClassId, @EmailToAdd";
+
+            var parameters = new[]
+            {
+                new SqlParameter("@TeacherUserId", teacherUserId),
+                new SqlParameter("@ClassId", classId),
+                new SqlParameter("@EmailToAdd", email)
+            };
+
+            try
+            {
+                await _context.Database.ExecuteSqlRawAsync(sql, parameters);
+            }
+            catch (SqlException ex)
+            {
+                // Handle SQL errors here, ex.Message contains the RAISERROR message
+                throw new ApplicationException(ex.Message);
+            }
+        }
+
+
 
         public async Task<ClassParticipantResponseDto> SetMainTeacherAsync(int userId, int classId)
         {

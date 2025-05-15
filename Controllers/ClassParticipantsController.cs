@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 
 namespace ClassRoomClone_App.Server.Controllers
 {
@@ -12,10 +13,12 @@ namespace ClassRoomClone_App.Server.Controllers
     public class ClassParticipantsController : ControllerBase
     {
         private readonly IClassParticipantsService _participantsService;
+        private readonly IUserContextService _userContext;
 
-        public ClassParticipantsController(IClassParticipantsService participantsService)
+        public ClassParticipantsController(IClassParticipantsService participantsService , IUserContextService userContext)
         {
             _participantsService = participantsService;
+            _userContext = userContext;
         }
 
         // GET: api/classes/{classId}/participants
@@ -32,6 +35,32 @@ namespace ClassRoomClone_App.Server.Controllers
 
             return Ok(participants);
         }
+        
+        [HttpPost("subteachers")]
+        public async Task<IActionResult> AddSubTeacher(int teacherUserId , int classId, [FromBody] AddParticipantDto dto)
+        {
+            //var teacherUserId = _userContext.GetCurrentUserId();
+
+            await _participantsService.AddSubTeacherToClassAsync(teacherUserId, classId, dto.Email);
+
+            return Ok(new { message = "SubTeacher added successfully." });
+        }
+        
+        [HttpPost("students")]
+        public async Task<IActionResult> AddStudent(int teacherUserId, int classId, [FromBody] AddParticipantDto dto)
+        {
+            //var teacherUserId = _userContext.GetCurrentUserId();
+
+            await _participantsService.AddStudentToClassAsync(teacherUserId, classId, dto.Email);
+
+            return Ok(new { message = "Student added successfully." });
+        }
+        
+        public class AddParticipantDto
+        {
+            public string Email { get; set; }
+        }
+
 
         // POST: api/classes/{classId}/participants/sub-teachers/{userId}
         [HttpPost("sub-teachers/{userId:int}")]
