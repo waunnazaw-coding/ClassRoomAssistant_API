@@ -2,8 +2,9 @@
 using ClassRoomClone_App.Server.DTOs;
 using ClassRoomClone_App.Server.Services.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+using ClassRoomClone_App.Server.Helpers;
 
 namespace ClassRoomClone_App.Server.Controllers
 {
@@ -18,86 +19,101 @@ namespace ClassRoomClone_App.Server.Controllers
         {
             _announcementService = announcementService;
         }
-        
+
         [HttpGet("with-comments")]
-        public async Task<ActionResult<List<AnnouncementWithMessagesDto>>> GetAnnouncementsWithMessages()
+        public async Task<ActionResult<ApiResponse<IEnumerable<AnnouncementWithMessagesDto>>>> GetAnnouncementsWithMessages()
         {
             var announcements = await _announcementService.GetAnnouncementsWithMessagesAsync();
-            return Ok(announcements);
+            return Ok(new ApiResponse<List<AnnouncementWithMessagesDto>>(announcements, true, "Announcements with messages retrieved successfully."));
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AnnouncementResponseDto>>> GetAnnouncementsByClassId(int classId)
+        public async Task<ActionResult<ApiResponse<IEnumerable<AnnouncementResponseDto>>>> GetAnnouncementsByClassId(int classId)
         {
             var announcements = await _announcementService.GetAnnouncementsByClassIdAsync(classId);
-            return Ok(announcements);
+            return Ok(new ApiResponse<IEnumerable<AnnouncementResponseDto>>(announcements, true, "Announcements retrieved successfully."));
         }
 
-        // POST: api/classes/{classId}/announcements
         [HttpPost]
-        
-        public async Task<ActionResult<AnnouncementResponseDto>> CreateAnnouncement(
+        public async Task<ActionResult<ApiResponse<AnnouncementResponseDto>>> CreateAnnouncement(
             [FromRoute] int classId,
             [FromBody] AnnouncementCreateRequestDto dto)
         {
             if (dto.ClassId != classId)
-                return BadRequest("Class ID mismatch.");
+                return BadRequest(new ApiResponse<AnnouncementResponseDto>((AnnouncementResponseDto)null, false, "Class ID mismatch."));
 
             try
             {
                 var createdAnnouncement = await _announcementService.CreateAnnouncementAsync(dto);
-                return createdAnnouncement;
+                return CreatedAtAction(nameof(GetAnnouncementsByClassId), new { classId = classId }, 
+                    new ApiResponse<AnnouncementResponseDto>(createdAnnouncement, true, "Announcement created successfully."));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = ex.Message });
+                // Log exception here if needed
+                return StatusCode(500, new ApiResponse<AnnouncementResponseDto>((AnnouncementResponseDto)null, false, "An unexpected error occurred."));
             }
         }
 
-        // PUT: api/classes/{classId}/announcements/{announcementId}
         [HttpPut("{announcementId:int}")]
-        public async Task<IActionResult> UpdateAnnouncement(
+        public async Task<ActionResult<ApiResponse<object>>> UpdateAnnouncement(
             [FromRoute] int classId,
             [FromRoute] int announcementId,
             [FromBody] AnnouncementCreateRequestDto dto)
         {
             if (dto.ClassId != classId)
-                return BadRequest("Class ID mismatch.");
+                return BadRequest(new ApiResponse<object>(null, false, "Class ID mismatch."));
 
             try
             {
                 await _announcementService.UpdateAnnouncementAsync(announcementId, dto);
-                return NoContent();
+                return Ok(new ApiResponse<object>(null, true, "Announcement updated successfully."));
             }
             catch (KeyNotFoundException)
             {
-                return NotFound(new { Message = "Announcement not found." });
+                return NotFound(new ApiResponse<object>(null, false, "Announcement not found."));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = ex.Message });
+                // Log exception here if needed
+                return StatusCode(500, new ApiResponse<object>(null, false, "An unexpected error occurred."));
             }
         }
 
-        // DELETE: api/classes/{classId}/announcements/{announcementId}
         [HttpDelete("{announcementId:int}")]
-        public async Task<IActionResult> DeleteAnnouncement(
+        public async Task<ActionResult<ApiResponse<object>>> DeleteAnnouncement(
             [FromRoute] int classId,
             [FromRoute] int announcementId)
         {
             try
             {
                 await _announcementService.DeleteAnnouncementAsync(announcementId);
-                return NoContent();
+                return Ok(new ApiResponse<object>(null, true, "Announcement deleted successfully."));
             }
             catch (KeyNotFoundException)
             {
-                return NotFound(new { Message = "Announcement not found." });
+                return NotFound(new ApiResponse<object>(null, false, "Announcement not found."));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = ex.Message });
+                // Log exception here if needed
+                return StatusCode(500, new ApiResponse<object>(null, false, "An unexpected error occurred."));
             }
         }
     }
+
+    // Example ApiResponse<T> class, adjust namespace and location as needed
+    // public class ApiResponse<T>
+    // {
+    //     public bool Success { get; set; }
+    //     public string Message { get; set; }
+    //     public T Data { get; set; }
+
+    //     public ApiResponse(T data, bool success = true, string message = null)
+    //     {
+    //         Success = success;
+    //         Message = message;
+    //         Data = data;
+    //     }
+    // }
 }
