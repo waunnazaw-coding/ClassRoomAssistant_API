@@ -88,16 +88,16 @@ namespace ClassRoomClone_App.Server.Controllers
             try
             {
                 await _announcementService.DeleteAnnouncementAsync(announcementId);
-                return Ok(new ApiResponse<object>(null, true, "Announcement deleted successfully."));
+                return Ok(new ApiResponse<object>((object)null, true, "Announcement deleted successfully."));
             }
             catch (KeyNotFoundException)
             {
-                return NotFound(new ApiResponse<object>(null, false, "Announcement not found."));
+                return NotFound(new ApiResponse<object>((object)null, false, "Announcement not found."));
             }
             catch (Exception ex)
             {
                 // Log exception here if needed
-                return StatusCode(500, new ApiResponse<object>(null, false, "An unexpected error occurred."));
+                return StatusCode(500, new ApiResponse<object>((object)null, false, "An unexpected error occurred."));
             }
         }
     }
