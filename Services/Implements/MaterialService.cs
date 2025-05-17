@@ -2,6 +2,8 @@
 using ClassRoomClone_App.Server.Models;
 using ClassRoomClone_App.Server.Repositories.Interfaces;
 using ClassRoomClone_App.Server.Services.Interfaces;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClassRoomClone_App.Server.Services.Implements;
 
@@ -49,7 +51,7 @@ public class MaterialService : IMaterialService
                     FileType = a.FileType ?? string.Empty,
                     FileUrl = a.FileUrl,
                     FilePath = a.FilePath,
-                    CreatedBy = a.CreatedBy,
+                   // CreatedBy = a.CreatedBy,
                     CreatedAt = a.CreatedAt
                 })
                 .ToList()
@@ -74,6 +76,7 @@ public class MaterialService : IMaterialService
             var material = await _materialRepo.AddAsync(new Material
             {
                 Title = request.Title,
+                Description = request.Description,
                 ClassWorkId = classWork.Id,
                 CreatedAt = DateTime.UtcNow
             });
@@ -91,18 +94,34 @@ public class MaterialService : IMaterialService
             }).ToList();
 
             await _attachmentRepo.AddRangeAsync(attachments);
-            
-            var studentUserIds = await _classParticipantsRepo.GetStudentUserIdsByClassIdAsync(request.ClassId);
-            
-            var notifications = studentUserIds.Select(userId => new Notification
+
+            var studentUserIds = await _context.ClassParticipants
+    .Where(cp => cp.ClassId == request.ClassId && cp.Role == "Student" && cp.UserId.HasValue)
+    .Select(cp => cp.UserId.Value)
+    .ToListAsync();
+
+
+
+            const string sql = @"
+ INSERT INTO Notifications 
+     (UserId, Type, ReferenceId, IsRead, CreatedAt)
+ VALUES 
+     (@UserId, @Type, @ReferenceId, @IsRead, @CreatedAt)";
+
+            foreach (var userId in studentUserIds)
             {
-                UserId = userId,
-                Type = "Materail",
-                ReferenceId = material.Id,
-                IsRead = false,
-                CreatedAt = DateTime.UtcNow
-            });
-            await _notificationRepo.AddRangeAsync(notifications);
+                var parameters = new[]
+                {
+        new SqlParameter("@UserId", userId),
+        new SqlParameter("@Type", "Material"),
+        new SqlParameter("@ReferenceId", material.Id),
+        new SqlParameter("@IsRead", false),
+        new SqlParameter("@CreatedAt", DateTime.UtcNow)
+    };
+
+                await _context.Database.ExecuteSqlRawAsync(sql, parameters);
+            }
+
 
             await transaction.CommitAsync();
 

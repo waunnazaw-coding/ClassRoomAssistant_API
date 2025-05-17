@@ -16,5 +16,4 @@ public partial class Material
     public DateTime? CreatedAt { get; set; }
 
     public virtual ClassWork ClassWork { get; set; } = null!;
-    
 }

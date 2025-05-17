@@ -13,6 +13,7 @@ public class AssignmentService : IAssignmentService
     private readonly IClassParticipantsRepository _classParticipantsRepo;
     private readonly IClassWorkRepository _classWorkRepo;
     private readonly DbContextClassName _context;
+    private readonly IAssignmentCreateRepository _assignmentCreateRepo;
     
     public AssignmentService(
         IClassWorkRepository classWorkRepo,
@@ -21,7 +22,8 @@ public class AssignmentService : IAssignmentService
         IAttachmentRepository attachmentRepo,
         INotificationRepository notificationRepo,
         IClassParticipantsRepository classParticipantsRepo,
-        DbContextClassName context)
+        DbContextClassName context,
+        IAssignmentCreateRepository assignmentCreateRepository)
     {
         _classWorkRepo = classWorkRepo;
         _repository = assignmentRepo;
@@ -29,6 +31,7 @@ public class AssignmentService : IAssignmentService
         _classParticipantsRepo = classParticipantsRepo;
         _context = context;
         _notificationRepo = notificationRepo;
+        _assignmentCreateRepo = assignmentCreateRepository;
     }
     public async Task<IEnumerable<AssignmentResponseDto>> GetAllAsync(int classWorkId)
     {
@@ -42,7 +45,14 @@ public class AssignmentService : IAssignmentService
         if (assignment == null) throw new KeyNotFoundException("Assignment not found.");
         return MapToResponseDto(assignment);
     }
+
     
+    public async Task<AssignmentCreateResponse> CreateAssignmentAsync(AssignmentCreateRequest request)
+    {
+        return await _assignmentCreateRepo.CreateFullAssignmentAsync(request);
+    }
+    
+
     public async Task<IEnumerable<AssignmentWithStatusDto>> GetAssignmentsWithStatusAsync(int userId)
     {
         var assignments = await _repository.GetAssignmentsWithClassInfoAsync(userId);
@@ -64,78 +74,83 @@ public class AssignmentService : IAssignmentService
             .ToList();
     }
     
-    public async Task<AssignmentResponseDto> CreateAssignmentWithTodosAsync(CreateAssignmentRequestDto request)
+  public async Task<AssignmentResponseDto> CreateAssignmentWithTodosAsync(CreateAssignmentRequestDto request)
+{
+    if (request == null)
+        throw new ArgumentNullException(nameof(request));
+
+    // 1. Handle TopicId: treat 0 or null as null
+    int? topicId = (request.TopicId.HasValue && request.TopicId.Value != 0) ? request.TopicId : null;
+
+    // 2. Create ClassWork entity
+    var classWork = new ClassWork
     {
-        // 1. Create ClassWork
-        var classWork = new ClassWork
-        {
-            ClassId = request.ClassId,
-            TopicId = request.TopicId,
-            Type = "Assignment",
-            CreatedAt = DateTime.UtcNow
-        };
-        classWork = await _classWorkRepo.AddClassWorkAsync(classWork);
+        ClassId = request.ClassId,
+        TopicId = topicId,
+        Type = "Assignment",
+        CreatedAt = DateTime.UtcNow
+    };
 
-        // 2. Create Assignment linked to ClassWork
-        var assignment = new Assignment
-        {
-            ClassWorkId = classWork.Id,
-            Title = request.Title,
-            Instructions = request.Instructions,
-            Points = request.Points,
-            DueDate = request.DueDate
-        };
-        assignment = await _repository.AddAsync(assignment);
-        
-        var attachments = request.Attachments.Select(a => new Attachment
-        {
-            ReferenceId = assignment.Id,
-            ReferenceType = "Material",
-            FileType = a.FileType,
-            FilePath = a.FilePath,
-            FileUrl = a.FileUrl,
-            //CreatedBy = request.CreatedBy,
-            CreatedAt = DateTime.UtcNow
-        }).ToList();
+    classWork = await _classWorkRepo.AddClassWorkAsync(classWork)
+        ?? throw new NullReferenceException("Failed to create ClassWork.");
 
-        await _attachmentRepo.AddRangeAsync(attachments);
+    // 3. Create Assignment entity linked to ClassWork
+    var assignment = new Assignment
+    {
+        ClassWorkId = classWork.Id,
+        Title = request.Title,
+        Instructions = request.Instructions,
+        Points = request.Points,
+        DueDate = request.DueDate,
+        AllowLateSubmission = request.AllowLateSubmission,
+        CreatedBy = request.CreatedByUserId
+    };
 
-        // 3. Get all student UserIds from ClassParticipants
-        var studentUserIds = await _classParticipantsRepo.GetStudentUserIdsByClassIdAsync(request.ClassId);
+    assignment = await _repository.AddAsync(assignment)
+        ?? throw new NullReferenceException("Failed to create Assignment.");
 
-        // 4. Create Todos for each student
-        var todos = studentUserIds.Select(userId => new Todo
-        {
-            UserId = userId,
-            ClassWorkId = classWork.Id,
-            DueDate = request.DueDate,
-            Status = "Pending",
-            IsMissing = false
-        }).ToList();
+    // 4. Insert Attachments if any
+    
 
-        // 5. Bulk insert Todos
+    // 5. Get all student UserIds from ClassParticipants for the class
+    var studentUserIds = await _classParticipantsRepo.GetStudentUserIdsByClassIdAsync(request.ClassId);
+     
+    // 6. Create Todos for each student
+    var todos = studentUserIds.Select(userId => new Todo
+    {
+        UserId = userId,
+        ClassWorkId = classWork.Id,
+        DueDate = request.DueDate,
+        Status = "Pending",
+        IsMissing = false
+    }).ToList();
+
+    if (todos.Any())
         await _todoRepo.BulkAddTodosAsync(todos);
-        
-        var notifications = studentUserIds.Select(userId => new Notification
-        {
-            UserId = userId,
-            Type = "Assignement",
-            ReferenceId = assignment.Id,
-            IsRead = false,
-            CreatedAt = DateTime.UtcNow
-        });
-        await _notificationRepo.AddRangeAsync(notifications);
-        
 
-        // 6. Return response DTO
-        return new AssignmentResponseDto
-        {
-            Id = assignment.Id,
-            ClassWorkId = classWork.Id,
-            Title = assignment.Title,
-            DueDate = assignment.DueDate
-        };
-    }
+    // 7. Create Notifications for each student
+    var notifications = studentUserIds.Select(userId => new Notification
+    {
+        UserId = userId,
+        Type = "Assignment",
+        ReferenceId = assignment.Id,
+        IsRead = false,
+        CreatedAt = DateTime.UtcNow
+    }).ToList();
+
+    if (notifications.Any())
+        await _notificationRepo.AddRangeAsync(notifications);
+
+    // 8. Return response DTO
+    return new AssignmentResponseDto
+    {
+        Id = assignment.Id,
+        ClassWorkId = classWork.Id,
+        Title = assignment.Title,
+        DueDate = assignment.DueDate
+    };
+}
+
 
     public async Task<AssignmentResponseDto> UpdateAsync(int id, AssignmentUpdateRequestDto dto)
     {

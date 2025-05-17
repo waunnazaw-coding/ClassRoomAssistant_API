@@ -19,13 +19,20 @@ public class UserContextService : IUserContextService
         if (user == null || !user.Identity.IsAuthenticated)
             throw new UnauthorizedAccessException("User is not authenticated.");
 
-        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+        // Try common claim types for user ID
+        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)
+                          ?? user.FindFirst("sub")
+                          ?? user.FindFirst("userId");
 
         if (userIdClaim == null)
             throw new Exception("User ID claim not found.");
 
-        return int.Parse(userIdClaim.Value);
+        if (!int.TryParse(userIdClaim.Value, out int userId))
+            throw new Exception("User ID claim is not a valid integer.");
+
+        return userId;
     }
+
 
     public string GetCurrentUserEmail()
     {

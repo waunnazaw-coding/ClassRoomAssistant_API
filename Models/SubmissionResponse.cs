@@ -9,17 +9,13 @@ public partial class SubmissionResponse
 
     public int SubmissionId { get; set; }
 
-    public string ResponseType { get; set; } = null!;
+    public string FileType { get; set; } = null!;
 
     public string? FilePath { get; set; }
 
-    public string? FileName { get; set; }
-
-    public long? FileSize { get; set; }
-
-    public string? MimeType { get; set; }
-
     public string? Link { get; set; }
+
+    public string? FileName { get; set; }   
 
     public DateTime UploadedAt { get; set; }
 

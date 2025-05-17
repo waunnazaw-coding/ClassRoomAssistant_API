@@ -1,5 +1,6 @@
 ﻿using ClassRoomClone_App.Server.Models;
 using ClassRoomClone_App.Server.Repositories.Interfaces;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassRoomClone_App.Server.Repositories.Implements

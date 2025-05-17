@@ -31,4 +31,11 @@ public class SubmissionResponseRepository : ISubmissionResponseRepository
         await _context.SubmissionResponses.AddRangeAsync(responses);
         await _context.SaveChangesAsync();
     }
+    
+    public async Task<SubmissionResponse> AddAsync(SubmissionResponse response)
+    {
+        await _context.SubmissionResponses.AddAsync(response);
+        await _context.SaveChangesAsync();
+        return response;
+    }
 }

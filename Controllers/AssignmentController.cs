@@ -1,17 +1,23 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ClassRoomClone_App.Server.DTOs;
 using ClassRoomClone_App.Server.Services.Interfaces;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 [ApiController]
-[Route("api/classes/{classId:int}/assignments")]
+[Route("api/assignments")]
 public class AssignmentsController : ControllerBase
 {
     private readonly IAssignmentService _assignmentService;
+    private readonly IAuthorizationService _authorizationService;
 
-    public AssignmentsController(IAssignmentService assignmentService)
+    public AssignmentsController(
+        IAssignmentService assignmentService,
+        IAuthorizationService authorizationService)
     {
         _assignmentService = assignmentService;
+        _authorizationService = authorizationService;
     }
 
     // GET: api/classes/{classId}/assignments/{assignmentId}
@@ -20,10 +26,21 @@ public class AssignmentsController : ControllerBase
         [FromRoute] int classId,
         [FromRoute] int assignmentId)
     {
+        // Allow all roles (Teacher, SubTeacher, Student) to view
+        var authResult = await _authorizationService.AuthorizeAsync(
+            User, classId, "TeacherOrSubTeacher");
+
+        if (!authResult.Succeeded)
+        {
+            // Optionally check if student role is allowed for viewing
+            var studentAuth = await _authorizationService.AuthorizeAsync(User, classId, "StudentOnly");
+            if (!studentAuth.Succeeded)
+                return Forbid();
+        }
+
         try
         {
             var assignment = await _assignmentService.GetByIdAsync(assignmentId);
-            
             return Ok(assignment);
         }
         catch (KeyNotFoundException ex)
@@ -32,21 +49,37 @@ public class AssignmentsController : ControllerBase
         }
     }
 
-    // POST: api/classes/{classId}/assignments
-    [HttpPost]
-    public async Task<ActionResult<AssignmentResponseDto>> CreateAssignment(
-        [FromRoute] int classId,
-        [FromBody] CreateAssignmentRequestDto dto)
+    // POST: api/classes/{classId}/assignments/create
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateAssignment(
+        [FromBody] AssignmentCreateRequest request)
     {
-        if (dto.ClassId != classId)
-            return BadRequest("Class ID mismatch.");
+        // Only Teacher role can create assignments
+        //var authResult = await _authorizationService.AuthorizeAsync(User, request.ClassId, "TeacherOnly");
+        //if (!authResult.Succeeded)
+        //    return Forbid();
 
-        var created = await _assignmentService.CreateAssignmentWithTodosAsync(dto);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
 
-        return CreatedAtAction(
-            nameof(GetAssignmentById),
-            new { classId, assignmentId = created.Id },
-            created);
+        var result = await _assignmentService.CreateAssignmentAsync(request);
+        return Ok(result);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateAssignmentAsync(
+        [FromBody] CreateAssignmentRequestDto request)
+    {
+        // Only Teacher role can create assignments
+        //var authResult = await _authorizationService.AuthorizeAsync(User, request.ClassId, "TeacherOnly");
+        //if (!authResult.Succeeded)
+        //    return Forbid();
+
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var result = await _assignmentService.CreateAssignmentWithTodosAsync(request);
+        return Ok(result);
     }
 
     // PUT: api/classes/{classId}/assignments/{assignmentId}
@@ -56,11 +89,14 @@ public class AssignmentsController : ControllerBase
         [FromRoute] int assignmentId,
         [FromBody] AssignmentUpdateRequestDto dto)
     {
+        // Only Teacher role can update
+        var authResult = await _authorizationService.AuthorizeAsync(User, classId, "TeacherOnly");
+        if (!authResult.Succeeded)
+            return Forbid();
+
         try
         {
             var updated = await _assignmentService.UpdateAsync(assignmentId, dto);
-            // Optional: Validate updated assignment belongs to classId here or in service
-
             return Ok(updated);
         }
         catch (KeyNotFoundException ex)
@@ -75,6 +111,11 @@ public class AssignmentsController : ControllerBase
         [FromRoute] int classId,
         [FromRoute] int assignmentId)
     {
+        // Only Teacher role can delete
+        var authResult = await _authorizationService.AuthorizeAsync(User, classId, "TeacherOnly");
+        if (!authResult.Succeeded)
+            return Forbid();
+
         try
         {
             var deleted = await _assignmentService.DeleteAsync(assignmentId);
@@ -87,4 +128,6 @@ public class AssignmentsController : ControllerBase
             return StatusCode(500, "An error occurred while deleting the assignment.");
         }
     }
+
+
 }

@@ -7,5 +7,5 @@ public class MaterialCreateRequestDto
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public List<AttachmentCreateDto> Attachments { get; set; } = new();
-    public int CreatedBy { get; set; }
+    public int? CreatedBy { get; set; }
 }

@@ -9,7 +9,7 @@ namespace ClassRoomClone_App.Server.Controllers
 {
     [ApiController]
     [Route("api/classes/{classId:int}/announcements")]
-    [Authorize(Policy = "TeacherOrSubTeacher")]
+    //[Authorize(Policy = "TeacherOrSubTeacher")]
     public class AnnouncementsController : ControllerBase
     {
         private readonly IAnnouncementService _announcementService;

@@ -11,6 +11,10 @@ namespace ClassRoomClone_App.Server.Services.Interfaces
         Task<ClassParticipantResponseDto> SetMainTeacherAsync(int userId, int classId);
 
         Task<ClassParticipantResponseDto> AddSubTeacherAsync(int userId, int classId);
+        
+        Task AddSubTeacherToClassAsync(int teacherUserId, int classId, string email);
+
+        Task AddStudentToClassAsync(int teacherUserId, int classId, string email);
 
         Task<bool> TransferOwnershipAsync(int classId, int currentOwnerId, int newOwnerId);
 

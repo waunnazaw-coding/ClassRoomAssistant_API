@@ -11,5 +11,10 @@ public interface IAssignmentSubmissionService
         SubmissionResponseUpdateDto dto
     );
     Task<List<AssignmentSubmissionDto>> GetSubmissionsByAssignmentIdAsync(int assignmentId);
-    Task<AssignmentSubmissionDto> CreateSubmissionAsync(AssignmentSubmissionCreateDto dto);
+
+    Task<AssignmentSubmissionDto> CreateSubmissionAsync(AssignmentSubmissionCreateDto dto,
+        CancellationToken cancellationToken = default);
+
+    Task<Stream> DownloadFileFromFtpAsync(string remoteFilePath, CancellationToken cancellationToken);
+
 }

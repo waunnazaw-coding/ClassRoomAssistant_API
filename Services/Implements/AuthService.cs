@@ -2,105 +2,103 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ClassRoomClone_App.Server.DTOs;
+using ClassRoomClone_App.Server.DTOs.AuthDtos;
 using ClassRoomClone_App.Server.Models;
 using ClassRoomClone_App.Server.Repositories.Interfaces;
 using ClassRoomClone_App.Server.Services.Interfaces;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.IdentityModel.Tokens;
 
-namespace ClassRoomClone_App.Server.Services.Implements
+public class AuthService : IAuthService
 {
-    public class AuthService : IAuthService
+    private readonly IUserRepository _userRepository;
+    private readonly IJwtService _jwtService;
+
+    public AuthService(IUserRepository userRepository, IJwtService jwtService)
     {
-        private readonly IUserRepository _userRepo;
-        private readonly IJwtService _jwtService;
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _jwtService = jwtService ?? throw new ArgumentNullException(nameof(jwtService));
+    }
 
-        public AuthService(IUserRepository userRepo, IJwtService jwtService)
+    public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto model)
+    {
+        if (model == null) throw new ArgumentNullException(nameof(model));
+
+        var existingUser = await _userRepository.GetByEmailAsync(model.Email);
+        if (existingUser != null)
+            throw new InvalidOperationException("Email already registered.");
+
+        var user = new User
         {
-            _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
-            _jwtService = jwtService ?? throw new ArgumentNullException(nameof(jwtService));
-        }
-        
-        public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto)
+            Name = model.Name,
+            Email = model.Email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _userRepository.AddAsync(user);
+        var tokens = await _jwtService.GenerateTokensAsync(user);
+
+        return MapToAuthResponseDto(tokens);
+    }
+
+    public async Task<AuthResponseDto> LoginAsync(LoginRequestDto model)
+    {
+        if (model == null) throw new ArgumentNullException(nameof(model));
+
+        var user = await _userRepository.GetByEmailAsync(model.Email);
+        if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+            throw new UnauthorizedAccessException("Invalid credentials.");
+
+        var tokens = await _jwtService.GenerateTokensAsync(user);
+        return MapToAuthResponseDto(tokens);
+    }
+
+    public async Task<UserResponseDto_> GetMeAsync(int userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null) return null;
+
+        return new UserResponseDto_
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            Profile = user.Profile
+        };
+    }
 
-            var existingUser = await _userRepo.GetByEmailAsync(dto.Email);
-            if (existingUser != null)
-                throw new InvalidOperationException("Email already registered.");
+    public async Task<AuthResponseDto> RefreshTokenAsync(string accessToken, string refreshToken)
+    {
+        if (string.IsNullOrWhiteSpace(accessToken))
+            throw new ArgumentNullException(nameof(accessToken));
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            throw new ArgumentNullException(nameof(refreshToken));
 
-            var user = new User
-            {
-                Name = dto.Name,
-                Email = dto.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                CreatedAt = DateTime.UtcNow
-            };
+        var principal = _jwtService.GetPrincipalFromExpiredToken(accessToken);
+        if (principal == null)
+            throw new SecurityTokenException("Invalid access token.");
 
-            var createdUser = await _userRepo.AddAsync(user);
-            return await GenerateTokensAsync(createdUser);
-        }
-        
-        public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
+        var userIdClaim = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out int userId))
+            throw new SecurityTokenException("Invalid token claims.");
+
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+            throw new SecurityTokenException("Invalid or expired refresh token.");
+
+        var tokens = await _jwtService.GenerateTokensAsync(user);
+        return MapToAuthResponseDto(tokens);
+    }
+
+    private AuthResponseDto MapToAuthResponseDto(AuthResponse tokens)
+    {
+        return new AuthResponseDto
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
-
-            var user = await _userRepo.GetByEmailAsync(dto.Email);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-                throw new UnauthorizedAccessException("Invalid credentials.");
-
-            return await GenerateTokensAsync(user);
-        }
-        
-        public async Task<AuthResponseDto> RefreshTokenAsync(string accessToken, string refreshToken)
-        {
-            if (string.IsNullOrWhiteSpace(accessToken)) 
-                throw new ArgumentNullException(nameof(accessToken));
-            if (string.IsNullOrWhiteSpace(refreshToken)) 
-                throw new ArgumentNullException(nameof(refreshToken));
-
-            var principal = _jwtService.GetPrincipalFromExpiredToken(accessToken);
-            if (principal == null)
-                throw new SecurityTokenException("Invalid access token.");
-
-            var userIdClaim = principal.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdClaim, out int userId))
-                throw new SecurityTokenException("Invalid token claims.");
-
-            var user = await _userRepo.GetByIdAsync(userId);
-            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime < DateTime.UtcNow)
-                throw new SecurityTokenException("Invalid or expired refresh token.");
-
-            return await GenerateTokensAsync(user);
-        }
-        
-        public async Task LogoutAsync(int userId)
-        {
-            var user = await _userRepo.GetByIdAsync(userId);
-            if (user == null) return;
-
-            user.RefreshToken = null;
-            user.RefreshTokenExpiryTime = null;
-            await _userRepo.UpdateAsync(user);
-        }
-
-        private async Task<AuthResponseDto> GenerateTokensAsync(User user)
-        {
-            var accessToken = _jwtService.GenerateAccessToken(user);
-            var refreshToken = _jwtService.GenerateRefreshToken();
-
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // Refresh token valid for 7 days
-            await _userRepo.UpdateAsync(user);
-
-            return new AuthResponseDto
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                Name = user.Name,
-                Email = user.Email,
-                Profile = user.Profile,
-                Id = user.Id
-            };
-        }
+            AccessToken = tokens.AccessToken,
+            RefreshToken = tokens.RefreshToken,
+            AccessTokenExpiration = tokens.AccessTokenExpiration
+            // Optionally map other fields if needed
+        };
     }
 }

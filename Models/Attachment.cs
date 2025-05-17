@@ -17,9 +17,7 @@ public partial class Attachment
 
     public string? FilePath { get; set; }
 
-    public int CreatedBy { get; set; }
+    public int? CreatedBy { get; set; }
 
     public DateTime? CreatedAt { get; set; }
-
-    public virtual User CreatedByNavigation { get; set; } = null!;
 }

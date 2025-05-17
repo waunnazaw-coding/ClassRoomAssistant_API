@@ -8,6 +8,8 @@ public class CreateAssignmentRequestDto
     public string Title { get; set; } = null!;
     public string? Instructions { get; set; }
     public int? Points { get; set; }
+    public bool AllowLateSubmission { get; set; }
+    public int CreatedByUserId { get; set; }
     public DateTime? DueDate { get; set; }
-    public List<AttachmentCreateDto> Attachments { get; set; } = new();
+    //public List<AttachmentCreateDto> Attachments { get; set; } = new();
 }
