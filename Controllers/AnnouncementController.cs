@@ -24,7 +24,7 @@ namespace ClassRoomClone_App.Server.Controllers
         public async Task<ActionResult<ApiResponse<IEnumerable<AnnouncementWithMessagesDto>>>> GetAnnouncementsWithMessages()
         {
             var announcements = await _announcementService.GetAnnouncementsWithMessagesAsync();
-            return Ok(new ApiResponse<List<AnnouncementWithMessagesDto>>(announcements, true, "Announcements with messages retrieved successfully."));
+            return Ok(new ApiResponse<IEnumerable<AnnouncementWithMessagesDto>>(announcements, true, "Announcements with messages retrieved successfully."));
         }
 
         [HttpGet]
@@ -56,27 +56,27 @@ namespace ClassRoomClone_App.Server.Controllers
         }
 
         [HttpPut("{announcementId:int}")]
-        public async Task<ActionResult<ApiResponse<object>>> UpdateAnnouncement(
+        public async Task<ActionResult<ApiResponse<AnnouncementResponseDto>>> UpdateAnnouncement(
             [FromRoute] int classId,
             [FromRoute] int announcementId,
             [FromBody] AnnouncementCreateRequestDto dto)
         {
             if (dto.ClassId != classId)
-                return BadRequest(new ApiResponse<object>(null, false, "Class ID mismatch."));
+                return BadRequest(new ApiResponse<AnnouncementResponseDto>((AnnouncementResponseDto)null, false, "Class ID mismatch."));
 
             try
             {
                 await _announcementService.UpdateAnnouncementAsync(announcementId, dto);
-                return Ok(new ApiResponse<object>(null, true, "Announcement updated successfully."));
+                return Ok(new ApiResponse<AnnouncementResponseDto>((AnnouncementResponseDto)null, true, "Announcement updated successfully."));
             }
             catch (KeyNotFoundException)
             {
-                return NotFound(new ApiResponse<object>(null, false, "Announcement not found."));
+                return NotFound(new ApiResponse<AnnouncementResponseDto>((AnnouncementResponseDto)null, false, "Announcement not found."));
             }
             catch (Exception ex)
             {
                 // Log exception here if needed
-                return StatusCode(500, new ApiResponse<object>(null, false, "An unexpected error occurred."));
+                return StatusCode(500, new ApiResponse<AnnouncementResponseDto>((AnnouncementResponseDto)null, false, "An unexpected error occurred."));
             }
         }
 
@@ -101,19 +101,5 @@ namespace ClassRoomClone_App.Server.Controllers
             }
         }
     }
-
-    // Example ApiResponse<T> class, adjust namespace and location as needed
-    // public class ApiResponse<T>
-    // {
-    //     public bool Success { get; set; }
-    //     public string Message { get; set; }
-    //     public T Data { get; set; }
-
-    //     public ApiResponse(T data, bool success = true, string message = null)
-    //     {
-    //         Success = success;
-    //         Message = message;
-    //         Data = data;
-    //     }
-    // }
+    
 }

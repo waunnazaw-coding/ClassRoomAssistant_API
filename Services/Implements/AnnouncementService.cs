@@ -36,7 +36,7 @@ public class AnnouncementService : IAnnouncementService
         {
             Id = a.Id,
             ClassId = a.ClassId,
-            Message = a.Message,
+            Announcements = a.Message,
             CreatedAt = a.CreatedAt
         }).ToList();
     }
@@ -73,7 +73,7 @@ public class AnnouncementService : IAnnouncementService
         {
             Id = announcement.Id,
             ClassId = announcement.ClassId,
-            Message = announcement.Message,
+            Announcements = announcement.Message,
             CreatedAt = announcement.CreatedAt
         };
     }
