@@ -57,6 +57,12 @@ namespace ClassRoomClone_App.Server.Services.Implements
                 Details = details
             };
         }
+
+        public async Task<bool> ApproveParticipantAsync(int userId, int classId)
+        {
+            return await _classRepository.ApproveParticipantAsync(userId, classId);
+        }
+
         public async Task<ClassResponseDto> AddClassAsync(ClassRequestDto requestDto, int userId)
         {
             string classCode = await GenerateUniqueClassCodeAsync();

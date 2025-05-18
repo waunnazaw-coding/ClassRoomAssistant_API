@@ -8,7 +8,6 @@ public partial class Announcement
     public int Id { get; set; }
 
     public int ClassId { get; set; }
-    
 
     public string Message { get; set; } = null!;
 

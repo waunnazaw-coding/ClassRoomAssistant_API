@@ -13,11 +13,11 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
             _context = context;
         }
 
-        public async Task<IEnumerable<Topic>> GetAllTopicsAsync(int userId)
+        public async Task<IEnumerable<Topic>> GetAllTopicsAsync(int classId)
         {
             return await _context.Topics
                 .AsNoTracking()
-                .Where(t => t.UserId == userId)
+                .Where(t => t.ClassId == classId)
                 .ToListAsync();
         }
 

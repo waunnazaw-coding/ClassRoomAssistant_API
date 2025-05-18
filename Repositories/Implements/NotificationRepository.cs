@@ -20,6 +20,12 @@ public class NotificationRepository : INotificationRepository
             .ToListAsync();
     }
     
+    public async Task AddAsync(Notification notifications)
+    {
+        await _context.Notifications.AddAsync(notifications);
+        await _context.SaveChangesAsync();
+    }
+    
     public async Task AddRangeAsync(IEnumerable<Notification> notifications)
     {
         await _context.Notifications.AddRangeAsync(notifications);

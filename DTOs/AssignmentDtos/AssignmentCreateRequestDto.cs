@@ -14,7 +14,6 @@ public class AssignmentCreateRequest
     public bool AllowLateSubmission { get; set; }
     public List<int>? StudentIds { get; set; } // null or empty means all students
     public List<AttachmentDto>? Attachments { get; set; }
-    public int CreatedByUserId { get; set; }
 }
 
 public class AttachmentDto

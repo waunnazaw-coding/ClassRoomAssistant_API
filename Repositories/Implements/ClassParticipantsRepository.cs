@@ -44,7 +44,7 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
             if (classId <= 0 || userId <= 0)
                 throw new ArgumentException("Class ID and User ID must be greater than zero.");
 
-            var entity = CreateClassParticipant(userId, classId, "Teacher", true);
+            var entity = CreateClassParticipant(userId, classId, "Teacher", true );
 
             await _context.ClassParticipants.AddAsync(entity);
             await _context.SaveChangesAsync();
@@ -61,7 +61,7 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
         {
             return await AddParticipantAsync(userId, classId, "Student", false);
         }
-
+        
         public async Task<bool> RemoveStudentAsync(int userId, int classId)
         {
             return await RemoveParticipantAsync(userId, classId, "Student");
@@ -116,6 +116,7 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 ClassId = classId,
                 Role = role,
                 IsOwner = isOwner,
+                Status = "Approved",
                 AddedAt = DateTime.UtcNow
             };
         }

@@ -5,6 +5,7 @@ namespace ClassRoomClone_App.Server.Repositories.Interfaces;
 public interface IClassWorkRepository
 {
     Task<List<Topic>> GetAllTopicsWithClassWorksAsync(int classId);
+    Task<Topic?> FilterByTopicAsync(int topicId, int classId);
     
     Task<ClassWork> AddClassWorkAsync(ClassWork classWork);
     

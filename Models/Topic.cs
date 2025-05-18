@@ -11,7 +11,7 @@ public partial class Topic
 
     public DateTime? CreatedAt { get; set; }
 
-    public int? UserId { get; set; }
+    public int? ClassId { get; set; }
 
     public virtual ICollection<ClassWork> ClassWorks { get; set; } = new List<ClassWork>();
 }

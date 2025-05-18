@@ -4,6 +4,7 @@ namespace ClassRoomClone_App.Server.Repositories.Interfaces;
 
 public interface INotificationRepository
 {
+    Task AddAsync(Notification notifications);
     Task<List<UserNotificationRawDto>> GetUserNotificationsRawAsync(int userId);
     Task AddRangeAsync(IEnumerable<Notification> notifications);
     Task<bool> MarkNotificationAsReadAsync(int notificationId);

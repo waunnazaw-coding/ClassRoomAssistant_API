@@ -28,6 +28,31 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 .Where(c => c.IsDeleted == false)
                 .ToListAsync();
         }
+        
+        public async Task<bool> ApproveParticipantAsync(int userId, int classId)
+        {
+            const string query = @"
+                                    UPDATE ClassParticipants
+                                    SET Status = 'Approved'
+                                    WHERE UserId = @UserId
+                                      AND ClassId = @ClassId
+                                      AND Status = 'Pending';
+                                ";
+
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                command.Parameters.Add("@ClassId", SqlDbType.Int).Value = classId;
+
+                await connection.OpenAsync();
+
+                int rowsAffected = await command.ExecuteNonQueryAsync();
+
+                // Return true if at least one row was updated
+                return rowsAffected > 0;
+            }
+        }
 
         public async Task<IEnumerable<UserClassesRawDto>> GetClassesByUserId(int userId)
         {

@@ -36,7 +36,7 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 int? topicId = null;
                 if (request.CreateNewTopic)
                 {
-                    topicId = await CreateTopicAsync( request.NewTopicTitle!, request.CreatedByUserId);
+                    topicId = await CreateTopicAsync( request.NewTopicTitle!, request.ClassId);
                 }
                 else
                 {
@@ -52,11 +52,11 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                     request.Points,
                     request.DueDate,
                     request.AllowLateSubmission,
-                    request.CreatedByUserId);
+                    request.ClassId);
 
                 if (request.Attachments != null && request.Attachments.Any())
                 {
-                    await AddAttachmentsAsync( assignmentId, request.Attachments, request.CreatedByUserId);
+                    await AddAttachmentsAsync( assignmentId, request.Attachments, request.ClassId);
                 }
 
                 List<int> students;
@@ -88,18 +88,18 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
             }
         }
 
-        public async Task<int?> CreateTopicAsync(string title, int createdByUserId)
+        public async Task<int?> CreateTopicAsync(string title, int classId)
         {
             await using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
             await using var cmd = new SqlCommand(@"
-                INSERT INTO Topics (Title, UserId) 
+                INSERT INTO Topics (Title, ClassId) 
                 OUTPUT INSERTED.Id 
-                VALUES (@Title, @UserId)", conn);
+                VALUES (@Title, @ClassId)", conn);
 
             cmd.Parameters.AddWithValue("@Title", title);
-            cmd.Parameters.AddWithValue("@UserId", createdByUserId);
+            cmd.Parameters.AddWithValue("@ClassId", classId);
 
             var result = await cmd.ExecuteScalarAsync();
             return result != null ? (int?)Convert.ToInt32(result) : null;

@@ -28,6 +28,8 @@ public class AuthController : ControllerBase
         }
     }
 
+
+    [Authorize]
     [HttpGet("get-me")]
     public async Task<IActionResult> GetMe()
     {
@@ -68,14 +70,5 @@ public class AuthController : ControllerBase
         }
     }
     
-    
 
-    //[Authorize]
-    //[HttpPost("logout")]
-    //public async Task<IActionResult> Logout()
-    //{
-    //    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-    //    await _authService.(userId);
-    //    return Ok(new { Message = "Logged out." });
-    //}
 }

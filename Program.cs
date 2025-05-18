@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 namespace ClassRoomClone_App.Server
 {
@@ -24,7 +25,7 @@ namespace ClassRoomClone_App.Server
             {
                 options.AddPolicy("AllowFrontend",
                     policy => policy
-                        .WithOrigins("http://localhost:5174") // Frontend origin
+                        .WithOrigins("http://localhost:5174" , "http://localhost:5175" , "http://localhost:5173") 
                         .AllowAnyHeader()
                         .AllowAnyMethod()
                 //.AllowCredentials() // Uncomment if credentials needed
@@ -117,6 +118,34 @@ namespace ClassRoomClone_App.Server
             builder.Services.AddScoped<IGradeService, GradeService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+
+            
+            builder.Services.AddSwaggerGen(options =>
+            {
+                //options.SwaggerDoc("v1", new OpenApiInfo { Title = "LMS API", Version = "v1" });
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" },
+                            Scheme = "oauth2",
+                            Name = "Bearer",
+                            In = ParameterLocation.Header,
+                        },
+                        new List<string>()
+                    }
+                });
+            });
+           
 
             var app = builder.Build();
 

@@ -55,9 +55,9 @@ public class AssignmentsController : ControllerBase
         [FromBody] AssignmentCreateRequest request)
     {
         // Only Teacher role can create assignments
-        //var authResult = await _authorizationService.AuthorizeAsync(User, request.ClassId, "TeacherOnly");
-        //if (!authResult.Succeeded)
-        //    return Forbid();
+        var authResult = await _authorizationService.AuthorizeAsync(User, request.ClassId, "TeacherOnly");
+        if (!authResult.Succeeded)
+            return Forbid();
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -71,9 +71,9 @@ public class AssignmentsController : ControllerBase
         [FromBody] CreateAssignmentRequestDto request)
     {
         // Only Teacher role can create assignments
-        //var authResult = await _authorizationService.AuthorizeAsync(User, request.ClassId, "TeacherOnly");
-        //if (!authResult.Succeeded)
-        //    return Forbid();
+        var authResult = await _authorizationService.AuthorizeAsync(User, request.ClassId, "TeacherOnly");
+        if (!authResult.Succeeded)
+            return Forbid();
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);

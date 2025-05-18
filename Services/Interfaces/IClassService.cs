@@ -12,6 +12,7 @@ namespace ClassRoomClone_App.Server.Services.Interfaces
         Task<IEnumerable<UserClassesRawDto>> GetClassesByUserId(int userId);
         Task<ClassResponseDto> GetClassByIdAsync(int id);
         Task<GetClassDetailsResponse> GetClassDetailsAsync(int classId);
+        Task<bool> ApproveParticipantAsync(int userId, int classId);
         Task<ClassResponseDto> AddClassAsync(ClassRequestDto requestDto, int userId);
         Task<ClassResponseDto?> GetClassByCodeAsync(string classCode);
         Task<bool> EnrollStudentInClassAsync(string classCode, int studentId);

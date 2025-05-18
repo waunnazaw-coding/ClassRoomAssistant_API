@@ -14,11 +14,13 @@ namespace ClassRoomClone_App.Server.Controllers
     {
         private readonly IClassParticipantsService _participantsService;
         private readonly IUserContextService _userContext;
+        private readonly IClassService _classService;
 
-        public ClassParticipantsController(IClassParticipantsService participantsService , IUserContextService userContext)
+        public ClassParticipantsController(IClassParticipantsService participantsService , IClassService classService , IUserContextService userContext)
         {
             _participantsService = participantsService;
             _userContext = userContext;
+            _classService = classService;
         }
 
         // GET: api/classes/{classId}/participants
@@ -56,11 +58,30 @@ namespace ClassRoomClone_App.Server.Controllers
             return Ok(new { message = "Student added successfully." });
         }
         
+        [HttpPost("approve")]
+        public async Task<IActionResult> ApproveParticipant(int userId, int classId)
+        {
+            if (userId <= 0 || classId <= 0)
+            {
+                return BadRequest(new { message = "Invalid userId or classId." });
+            }
+
+            bool success = await _classService.ApproveParticipantAsync(userId, classId);
+
+            if (success)
+            {
+                return Ok(new { message = "Participant approved successfully." });
+            }
+            else
+            {
+                return NotFound(new { message = "Participant not found or already approved." });
+            }
+        }
+        
         public class AddParticipantDto
         {
             public string Email { get; set; }
         }
-
 
         // POST: api/classes/{classId}/participants/sub-teachers/{userId}
         [HttpPost("sub-teachers/{userId:int}")]

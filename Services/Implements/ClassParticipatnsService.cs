@@ -14,11 +14,13 @@ namespace ClassRoomClone_App.Server.Services.Implements
     public class ClassParticipantsService : IClassParticipantsService
     {
         private readonly IClassParticipantsRepository _participantsRepository;
+        private readonly INotificationRepository _notificationRepository;
         private readonly DbContextClassName _context;
 
-        public ClassParticipantsService(IClassParticipantsRepository participantsRepository, DbContextClassName context)
+        public ClassParticipantsService(IClassParticipantsRepository participantsRepository, INotificationRepository notificationRepository ,DbContextClassName context)
         {
             _participantsRepository = participantsRepository;
+            _notificationRepository = notificationRepository;
             _context = context;
         }
 
@@ -42,6 +44,17 @@ namespace ClassRoomClone_App.Server.Services.Implements
             try
             {
                 await _context.Database.ExecuteSqlRawAsync(sql, parameters);
+
+                var notification = new Notification
+                {
+                    UserId = teacherUserId ,
+                    ReferenceId = classId,
+                    Type = "Approval",
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _notificationRepository.AddAsync(notification);
             }
             catch (SqlException ex)
             {
@@ -74,8 +87,7 @@ namespace ClassRoomClone_App.Server.Services.Implements
             }
         }
 
-
-
+        
         public async Task<ClassParticipantResponseDto> SetMainTeacherAsync(int userId, int classId)
         {
             var model = await _participantsRepository.SetMainTeacherAsync(userId, classId);

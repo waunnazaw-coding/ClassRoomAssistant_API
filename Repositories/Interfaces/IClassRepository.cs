@@ -12,6 +12,7 @@ namespace ClassRoomClone_App.Server.Repositories.Interfaces
         Task<IEnumerable<Class>> GetArchivedClassesAsync();
         Task<Class?> GetClassByIdAsync(int id);
         Task<List<ClassDetailDto>> GetClassDetailsAsync(int id);
+        Task<bool> ApproveParticipantAsync(int userId, int classId);
         Task<Class> AddClassAsync(Class entity);
         Task<Class?> UpdateClassAsync(Class entity);
         Task<bool> DeleteAsync(int id);

@@ -31,11 +31,19 @@ namespace ClassRoomClone_App.Server.Controllers
 
         // GET: api/classes/user/userId
         [HttpGet("user/{userId}")]
-public async Task<ActionResult<ApiResponse<IEnumerable<UserClassesRawDto>>>> GetUserClasses(int userId)
-{
-    var classes = await _classService.GetClassesByUserId(userId);
-    return Ok(new ApiResponse<IEnumerable<UserClassesRawDto>>(classes, true, "User classes retrieved successfully."));
-}
+        public async Task<ActionResult<IEnumerable<UserClassesRawDto>>> GetUserClasses(int userId)
+        {
+            var classes = await _classService.GetClassesByUserId(userId);
+
+            if (classes == null || !classes.Any())
+            {
+                // Return 404 Not Found if no classes found for the user
+                return NotFound("No classes found for the specified user.");
+            }
+
+            // Return 200 OK with the list of classes
+            return Ok(classes);
+        }
 
 
         // GET: api/classes/archived
@@ -71,20 +79,30 @@ public async Task<ActionResult<ApiResponse<IEnumerable<UserClassesRawDto>>>> Get
 
         // GET: api/classes/{id}
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<ApiResponse<ClassResponseDto>>> GetClassById(int id)
+        public async Task<ActionResult<ClassResponseDto>> GetClassById(int id)
         {
             try
             {
                 var classDto = await _classService.GetClassByIdAsync(id);
-                return Ok(new ApiResponse<ClassResponseDto>(classDto, true, "Class retrieved successfully."));
+
+                if (classDto == null)
+                {
+                    // Return 404 if the class was not found
+                    return NotFound("Class not found.");
+                }
+
+                // Return 200 OK with the class data
+                return Ok(classDto);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new ApiResponse<ClassResponseDto>((ClassResponseDto)null, false, ex.Message));
+                // Return 404 Not Found with message
+                return NotFound(ex.Message);
             }
             catch (Exception)
             {
-                return StatusCode(500, new ApiResponse<ClassResponseDto>((ClassResponseDto)null, false, "An unexpected error occurred."));
+                // Return 500 Internal Server Error with generic message
+                return StatusCode(500, "An unexpected error occurred.");
             }
         }
 

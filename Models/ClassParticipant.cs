@@ -19,6 +19,8 @@ public partial class ClassParticipant
 
     public DateTime? AddedAt { get; set; }
 
+    public string Status { get; set; } = null!;
+
     public virtual User? AddedByNavigation { get; set; }
 
     public virtual Class Class { get; set; } = null!;
