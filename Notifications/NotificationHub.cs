@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 
 namespace ClassRoomClone_App.Server.Notifications;
 
-public class NofificationHub : Hub
+[Authorize]
+public class NotificationHub : Hub
 {
     
 }

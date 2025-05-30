@@ -10,6 +10,8 @@ namespace ClassRoomClone_App.Server.Services.Interfaces
 
         Task<ClassParticipantResponseDto> SetMainTeacherAsync(int userId, int classId);
 
+        Task<string?> GetRetrieveRoleAsyn(int userId, int classId);
+
         Task<ClassParticipantResponseDto> AddSubTeacherAsync(int userId, int classId);
         
         Task AddSubTeacherToClassAsync(int teacherUserId, int classId, string email);

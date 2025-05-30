@@ -28,6 +28,14 @@ namespace ClassRoomClone_App.Server.Controllers
             var classes = await _classService.GetAllClassesAsync();
             return Ok(new ApiResponse<IEnumerable<ClassResponseDto>>(classes, true, "Classes retrieved successfully."));
         }
+        
+        // GET: api/classes-details-with-entityid
+        [HttpGet("{classId}/classdetail-with-entityid")]
+        public async Task<ActionResult<ApiResponse<IEnumerable<ClassDetailsWithEntityId>>>> ClassDetailsWithEntityId(int classId)
+        {
+            var classes = await _classService.GetClassDetailsWithEntityIdAsync(classId);
+            return Ok(new ApiResponse<IEnumerable<ClassDetailsWithEntityId>>(classes, true, "Classes retrieved successfully."));
+        }
 
         // GET: api/classes/user/userId
         [HttpGet("user/{userId}")]

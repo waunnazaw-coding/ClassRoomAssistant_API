@@ -97,6 +97,11 @@ namespace ClassRoomClone_App.Server.Services.Implements
             return await MapToDtoAsync(model);
         }
 
+        public async Task<string?> GetRetrieveRoleAsyn(int userId, int classId)
+        {
+            return await _participantsRepository.GetRetrieveRoleAsyn(userId , classId);
+        }
+
         public async Task<ClassParticipantResponseDto> AddSubTeacherAsync(int userId, int classId)
         {
             var model = await _participantsRepository.AddSubTeacherAsync(userId, classId);

@@ -38,6 +38,21 @@ namespace ClassRoomClone_App.Server.Controllers
             return Ok(participants);
         }
         
+        [HttpGet("{userId}/role")]
+        public async Task<ActionResult<IEnumerable<ClassParticipantResponseDto>>> GetRetrieveAsync(int userId,int classId)
+        {
+            if (classId <= 0)
+                return BadRequest("Invalid class ID.");
+
+            var participants = await _participantsService.GetRetrieveRoleAsyn(userId , classId);
+
+            if (participants == null || !participants.Any())
+                return NotFound("No participants found in this class.");
+
+            return Ok(participants);
+        }
+
+        
         [HttpPost("subteachers")]
         public async Task<IActionResult> AddSubTeacher(int teacherUserId , int classId, [FromBody] AddParticipantDto dto)
         {

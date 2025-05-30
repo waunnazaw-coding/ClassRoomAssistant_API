@@ -6,7 +6,9 @@ public interface IAssignmentService
 {
     Task<IEnumerable<AssignmentResponseDto>> GetAllAsync(int classWorkId);
     Task<AssignmentResponseDto> GetByIdAsync(int id);
-    Task<AssignmentCreateResponse> CreateAssignmentAsync(AssignmentCreateRequest request);
+
+    Task<AssignmentCreateResponse> CreateFullAssignmentAsync(
+        AssignmentCreateRequest request);
     Task<IEnumerable<AssignmentWithStatusDto>> GetAssignmentsWithStatusAsync(int userId);
     Task<AssignmentResponseDto> CreateAssignmentWithTodosAsync(CreateAssignmentRequestDto request);
     Task<AssignmentResponseDto> UpdateAsync(int id, AssignmentUpdateRequestDto dto);

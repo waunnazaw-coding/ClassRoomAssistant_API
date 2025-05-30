@@ -15,16 +15,16 @@ public class TopicsController : ControllerBase
         _topicService = topicService;
     }
 
-    // GET: api/topics
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<TopicDto>>> GetAllTopics(int userId)
-    {
-        var topics = await _topicService.GetAllTopicsAsync( userId);
-        return Ok(topics);
-    }
+        // GET: api/topics
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<TopicDto>>> GetAllTopics([FromQuery] int classId)
+        {
+            var topics = await _topicService.GetAllTopicsAsync(classId);
+            return Ok(topics);
+        }
 
-    // GET: api/topics/{topicId}
-    [HttpGet("{topicId:int}")]
+        // GET: api/topics/{topicId}
+        [HttpGet("{topicId:int}")]
     public async Task<ActionResult<TopicDto>> GetTopicById(int topicId)
     {
         try

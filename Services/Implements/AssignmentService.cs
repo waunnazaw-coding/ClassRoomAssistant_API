@@ -47,7 +47,8 @@ public class AssignmentService : IAssignmentService
     }
 
     
-    public async Task<AssignmentCreateResponse> CreateAssignmentAsync(AssignmentCreateRequest request)
+    public async Task<AssignmentCreateResponse> CreateFullAssignmentAsync(
+        AssignmentCreateRequest request)
     {
         return await _assignmentCreateRepo.CreateFullAssignmentAsync(request);
     }

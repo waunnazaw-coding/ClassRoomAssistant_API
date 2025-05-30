@@ -9,6 +9,7 @@ namespace ClassRoomClone_App.Server.Repositories.Interfaces
     {
         Task<IEnumerable<Class>> GetAllClassesAsync();
         Task<IEnumerable<UserClassesRawDto>> GetClassesByUserId(int userId);
+        Task<IEnumerable<ClassDetailsWithEntityId>> GetClassDetailsWithEntityIdAsync(int classId);
         Task<IEnumerable<Class>> GetArchivedClassesAsync();
         Task<Class?> GetClassByIdAsync(int id);
         Task<List<ClassDetailDto>> GetClassDetailsAsync(int id);

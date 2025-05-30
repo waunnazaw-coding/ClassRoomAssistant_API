@@ -14,7 +14,8 @@ namespace ClassRoomClone_App.Server.Repositories.Interfaces
         Task<IEnumerable<int>> GetAllStudentIdsInClassAsync(int classId);
         Task AddNotificationsAsync(int classWorkId, IEnumerable<int> userIds);
         Task AddTodosAsync(int classWorkId, IEnumerable<int> userIds, DateTime? dueDate);
-        
-        Task<AssignmentCreateResponse> CreateFullAssignmentAsync(AssignmentCreateRequest request);
+
+        Task<AssignmentCreateResponse> CreateFullAssignmentAsync(
+            AssignmentCreateRequest request);
     }
 }

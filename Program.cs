@@ -1,14 +1,21 @@
+using System.Configuration;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using ClassRoomClone_App.Server.CustomAuthorization;
+using ClassRoomClone_App.Server.Helpers;
 using ClassRoomClone_App.Server.Repositories.Implements;
 using ClassRoomClone_App.Server.Repositories.Interfaces;
 using ClassRoomClone_App.Server.Services.Implements;
 using ClassRoomClone_App.Server.Services.Interfaces;
 using ClassRoomClone_App.Server.Models;
+using ClassRoomClone_App.Server.Notifications;
+using CloudinaryDotNet;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -28,7 +35,7 @@ namespace ClassRoomClone_App.Server
                         .WithOrigins("http://localhost:5174" , "http://localhost:5175" , "http://localhost:5173") 
                         .AllowAnyHeader()
                         .AllowAnyMethod()
-                //.AllowCredentials() // Uncomment if credentials needed
+                        .AllowCredentials() // Uncomment if credentials needed
                 );
             });
 
@@ -52,9 +59,43 @@ namespace ClassRoomClone_App.Server
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"])),
                         ClockSkew = TimeSpan.Zero
                     };
+                    
+                    // Allow JWT token to be passed in query string for SignalR
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+
+                            Console.WriteLine($"AccessToken: {accessToken}");
+
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                path.StartsWithSegments("/notificationHub"))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
             builder.Services.AddHttpContextAccessor();
+            
+            // Register custom IUserIdProvider
+            builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
+            
+            builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+
+
+            builder.Services.AddSingleton(provider =>
+            {
+                var config = provider.GetRequiredService<IOptions<CloudinarySettings>>().Value;
+                Account account = new Account(config.CloudName, config.ApiKey, config.ApiSecret);
+                return new CloudinaryDotNet.Cloudinary(account);
+            });
+
+            builder.Services.AddScoped<CloudinaryService>();
 
             // Authorization policies and handlers
             builder.Services.AddScoped<IAuthorizationHandler, ClassRoleAuthorizationHandler>();
@@ -85,6 +126,9 @@ namespace ClassRoomClone_App.Server
 
             // Register user context service
             builder.Services.AddScoped<IUserContextService, UserContextService>();
+            
+            //Register Notification
+            builder.Services.AddSignalR();
 
             // Register repositories
             builder.Services.AddScoped<IClassRepository, ClassRepository>();
@@ -148,6 +192,12 @@ namespace ClassRoomClone_App.Server
            
 
             var app = builder.Build();
+            
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
 
             // Serve default files and static files
             app.UseDefaultFiles();
@@ -158,7 +208,7 @@ namespace ClassRoomClone_App.Server
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
+            
             app.UseHttpsRedirection();
 
             app.UseRouting();
@@ -168,11 +218,30 @@ namespace ClassRoomClone_App.Server
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapControllers();
+            // 5. Endpoints (controllers and SignalR hubs)
+            app.UseEndpoints(endpoints =>
+            {
+                
+                endpoints.MapHub<NotificationHub>("/notificationHub")
+                .RequireAuthorization()
+                .RequireCors("AllowFrontend");;
+                
+                endpoints.MapControllers();
+            });
 
             app.MapFallbackToFile("/index.html");
 
             app.Run();
+        }
+    }
+    
+    // Custom IUserIdProvider implementation
+    public class NameUserIdProvider : IUserIdProvider
+    {
+        public string GetUserId(HubConnectionContext connection)
+        {
+            // Use ClaimTypes.NameIdentifier or adjust to your claim
+            return connection.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
     }
 }

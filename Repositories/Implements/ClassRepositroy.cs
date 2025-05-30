@@ -6,6 +6,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ClassRoomClone_App.Server.DTOs;
+using Dapper;
 using Microsoft.Data.SqlClient;
 
 namespace ClassRoomClone_App.Server.Repositories.Implements
@@ -59,6 +60,23 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
             return await _context.UserClassesRawDtos
                 .FromSqlInterpolated($@"EXEC GetClassesUserId @UserId  = {userId}")
                 .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ClassDetailsWithEntityId>> GetClassDetailsWithEntityIdAsync(int classId)
+        {
+            using (IDbConnection db = new SqlConnection(_connectionString))
+            {
+                var parameters = new DynamicParameters();
+                parameters.Add("@ClassId", classId, DbType.Int32);
+
+                // Call stored procedure
+                var result = await db.QueryAsync<ClassDetailsWithEntityId>(
+                    "dbo.[GetClassDetailsWithEntityId]",
+                    parameters,
+                    commandType: CommandType.StoredProcedure);
+
+                return result;
+            }
         }
 
         public async Task<IEnumerable<Class>> GetArchivedClassesAsync()

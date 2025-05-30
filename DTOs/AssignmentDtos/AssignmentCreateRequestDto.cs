@@ -21,6 +21,8 @@ public class AttachmentDto
     public string FileType { get; set; } = null!; // "Drive", "YouTube", "Upload", "Link"
     public string? FileUrl { get; set; }
     public string? FilePath { get; set; }
+    
+    public IFormFile? FileUpload { get; set; }
 }
 
 // Models/AssignmentCreateResponse.cs

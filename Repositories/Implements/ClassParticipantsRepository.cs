@@ -22,7 +22,24 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 .Include(cp => cp.User)
                 .ToListAsync();
         }
+
         
+
+        private static readonly Func<DbContextClassName, int, int, Task<string?>> _getRoleQuery =
+            EF.CompileAsyncQuery((DbContextClassName context, int userId, int classId) =>
+                context.ClassParticipants
+                    .Where(cp => cp.UserId == userId && cp.ClassId == classId)
+                    .Select(cp => cp.Role)
+                    .FirstOrDefault());
+
+        public Task<string?> GetRetrieveRoleAsyn(int userId, int classId)
+        {
+            var role =  _getRoleQuery(_context, userId, classId);
+
+            return role;
+        }
+
+
         public async Task<IEnumerable<int>> GetUserIdsByClassIdAsync(int classId)
         {
             return await _context.ClassParticipants

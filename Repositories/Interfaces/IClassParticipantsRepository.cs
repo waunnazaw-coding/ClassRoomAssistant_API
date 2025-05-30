@@ -8,6 +8,7 @@ namespace ClassRoomClone_App.Server.Repositories.Interfaces
     public interface IClassParticipantsRepository
     {
         Task<IEnumerable<ClassParticipant>> GetAllParticipantsAsync(int classId);
+        Task<String?> GetRetrieveRoleAsyn(int userId, int classId);
         
         Task<IEnumerable<int>> GetUserIdsByClassIdAsync(int classId);
 

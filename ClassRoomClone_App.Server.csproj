@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="CloudinaryDotNet" Version="1.27.5" />
+    <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="FluentFTP" Version="52.1.0" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
     <PackageReference Include="MegaApiClient" Version="1.10.4" />

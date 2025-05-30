@@ -1,25 +1,27 @@
 ﻿using ClassRoomClone_App.Server.DTOs;
+using ClassRoomClone_App.Server.Notifications;
 using ClassRoomClone_App.Server.Repositories.Interfaces;
+using ClassRoomClone_App.Server.Services.Implements;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ClassRoomClone_App.Server.Repositories.Implements
 {
     public class AssignmentCreateRepository : IAssignmentCreateRepository
     {
+        private readonly IHubContext<NotificationHub> _notificationHubContext;
         private readonly string _connectionString;
+        private readonly CloudinaryService _cloudinaryService;
 
-        public AssignmentCreateRepository(IConfiguration configuration)
+        public AssignmentCreateRepository(IConfiguration configuration, CloudinaryService cloudinaryService , IHubContext<NotificationHub> notificationHubContext)
         {
+            _notificationHubContext = notificationHubContext;
             _connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new ArgumentNullException(nameof(configuration));
+            _cloudinaryService = cloudinaryService;
         }
 
         public async Task<AssignmentCreateResponse> CreateFullAssignmentAsync(AssignmentCreateRequest request)
-        {
+            {
             if (request == null) throw new ArgumentNullException(nameof(request));
             if (string.IsNullOrWhiteSpace(request.AssignmentTitle))
                 throw new ArgumentException("Assignment title is required.", nameof(request.AssignmentTitle));
@@ -36,14 +38,14 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 int? topicId = null;
                 if (request.CreateNewTopic)
                 {
-                    topicId = await CreateTopicAsync( request.NewTopicTitle!, request.ClassId);
+                    topicId = await CreateTopicAsync(request.NewTopicTitle!, request.ClassId);
                 }
                 else
                 {
                     topicId = request.SelectedTopicId;
                 }
 
-                int classWorkId = await CreateClassWorkAsync( request.ClassId, topicId);
+                int classWorkId = await CreateClassWorkAsync(request.ClassId, topicId);
 
                 int assignmentId = await CreateAssignmentAsync(
                     classWorkId,
@@ -56,21 +58,93 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
 
                 if (request.Attachments != null && request.Attachments.Any())
                 {
-                    await AddAttachmentsAsync( assignmentId, request.Attachments, request.ClassId);
+                    // Process each attachment
+                    foreach (var attachment in request.Attachments)
+                    {
+                        if (attachment.FileType == "Upload" && attachment.FileUpload != null)
+                        {
+                            // Upload file to Cloudinary based on file type
+                            var file = attachment.FileUpload;
+                            string? uploadedUrl = null;
+                            var mediaType = file.ContentType.Split('/')[0].ToLower();
+
+                            switch (mediaType)
+                            {
+                                case "image":
+                                    var imageResult = await _cloudinaryService.UploadImageAsync(file);
+                                    uploadedUrl = imageResult.SecureUrl.ToString();
+                                    break;
+
+                                case "video":
+                                    var videoResult = await _cloudinaryService.UploadVideoAsync(file);
+                                    uploadedUrl = videoResult.SecureUrl.ToString();
+                                    break;
+
+                                default:
+                                    var rawResult = await _cloudinaryService.UploadRawFileAsync(file);
+                                    uploadedUrl = rawResult.SecureUrl.ToString();
+                                    break;
+                            }
+
+                            // Update attachment URL with Cloudinary URL
+                            attachment.FileUrl = uploadedUrl;
+                        }
+                        else if (attachment.FileType == "YouTube" || attachment.FileType == "Link")
+                        {
+                            // For YouTube or Link, just keep the provided FileUrl as is (validate if needed)
+                            if (string.IsNullOrWhiteSpace(attachment.FileUrl))
+                            {
+                                throw new ArgumentException($"FileUrl is required for FileType '{attachment.FileType}'.");
+                            }
+                        }
+                        else if (attachment.FileType == "Drive")
+                        {
+                            // Handle Drive links or other types as needed, or throw if unsupported
+                            if (string.IsNullOrWhiteSpace(attachment.FileUrl))
+                            {
+                                throw new ArgumentException("FileUrl is required for Drive attachments.");
+                            }
+                        }
+                        else
+                        {
+                            throw new ArgumentException($"Unsupported FileType: {attachment.FileType}");
+                        }
+                    }
+
+                    // Save all attachments with updated FileUrls to DB
+                    await AddAttachmentsAsync(assignmentId, request.Attachments, request.ClassId);
                 }
 
                 List<int> students;
                 if (request.StudentIds == null || !request.StudentIds.Any())
                 {
-                    students = (await GetAllStudentIdsInClassAsync( request.ClassId)).ToList();
+                    students = (await GetAllStudentIdsInClassAsync(request.ClassId)).ToList();
                 }
                 else
                 {
                     students = request.StudentIds;
                 }
 
-                await AddNotificationsAsync( classWorkId, students);
-                await AddTodosAsync( classWorkId, students, request.DueDate);
+                await AddNotificationsAsync(classWorkId, students);
+                await AddTodosAsync(classWorkId, students, request.DueDate);
+
+                var className = await RetrieveClassNameAsync(request.ClassId);
+                
+                // Prepare the notification message, handle null or empty className gracefully
+                var notificationMessage = !string.IsNullOrEmpty(className)
+                    ? $"New assignment '{request.AssignmentTitle}' created for class '{className}'."
+                    : $"New assignment '{request.AssignmentTitle}' created.";
+
+                // Send real-time notifications to each student user
+                foreach (var studentId in students)
+                {
+                    await _notificationHubContext.Clients.User(studentId.ToString())
+                        .SendAsync("ReceiveNotification", new
+                        {
+                            Message = notificationMessage,
+                            AssignmentId = assignmentId,
+                        });
+                }
 
                 await transaction.CommitAsync();
 
@@ -88,6 +162,18 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
             }
         }
 
+        public async Task<string?> RetrieveClassNameAsync(int classId)
+        {
+            await using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+    
+            await using var cmd = new SqlCommand("SELECT Name FROM Classes WHERE Id = @classId", conn);
+            cmd.Parameters.AddWithValue("@classId", classId);
+
+            var result = await cmd.ExecuteScalarAsync();
+            return result as string;
+        }
+        
         public async Task<int?> CreateTopicAsync(string title, int classId)
         {
             await using var conn = new SqlConnection(_connectionString);
