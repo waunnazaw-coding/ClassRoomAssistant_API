@@ -53,18 +53,18 @@ public class AssignmentsController : ControllerBase
     [HttpPost("create")]
 public async Task<IActionResult> CreateAssignment(
     [FromForm] AssignmentCreateRequest request)
-{
-    // Authorization check
-    var authResult = await _authorizationService.AuthorizeAsync(User, request.ClassId, "TeacherOnly");
-    if (!authResult.Succeeded)
-        return Forbid();
+    {
+        // Authorization check
+        var authResult = await _authorizationService.AuthorizeAsync(User, request.ClassId, "TeacherOnly");
+        if (!authResult.Succeeded)
+            return Forbid();
 
-    if (!ModelState.IsValid)
-        return BadRequest(ModelState);
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
 
-    var result = await _assignmentService.CreateFullAssignmentAsync(request);
-    return Ok(result);
-}
+        var result = await _assignmentService.CreateFullAssignmentAsync(request);
+        return Ok(result);
+    }
 
 
     [HttpPost]

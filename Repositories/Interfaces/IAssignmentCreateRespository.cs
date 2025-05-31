@@ -15,6 +15,8 @@ namespace ClassRoomClone_App.Server.Repositories.Interfaces
         Task AddNotificationsAsync(int classWorkId, IEnumerable<int> userIds);
         Task AddTodosAsync(int classWorkId, IEnumerable<int> userIds, DateTime? dueDate);
 
+        Task<string?> RetrieveClassNameAsync(int classId);
+
         Task<AssignmentCreateResponse> CreateFullAssignmentAsync(
             AssignmentCreateRequest request);
     }

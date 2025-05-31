@@ -129,21 +129,22 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 await AddTodosAsync(classWorkId, students, request.DueDate);
 
                 var className = await RetrieveClassNameAsync(request.ClassId);
-                
-                // Prepare the notification message, handle null or empty className gracefully
-                var notificationMessage = !string.IsNullOrEmpty(className)
-                    ? $"New assignment '{request.AssignmentTitle}' created for class '{className}'."
-                    : $"New assignment '{request.AssignmentTitle}' created.";
 
-                // Send real-time notifications to each student user
+                // Prepare notification payload
+                var notificationPayload = new
+                {
+                    Title = $"New Assignment: {request.AssignmentTitle}",
+                    ClassName = className ?? "Your class",
+                    AssignmentId = assignmentId,
+                    DueDate = request.DueDate?.ToString("yyyy-MM-dd HH:mm"), 
+                    Message = $"A new assignment '{request.AssignmentTitle}' has been created for class '{className ?? "your class"}'. Due date: {request.DueDate:yyyy-MM-dd HH:mm}."
+                };
+
+                // Send real-time notifications to each student user via SignalR hub context
                 foreach (var studentId in students)
                 {
-                    await _notificationHubContext.Clients.User(studentId.ToString())
-                        .SendAsync("ReceiveNotification", new
-                        {
-                            Message = notificationMessage,
-                            AssignmentId = assignmentId,
-                        });
+                    await _notificationHubContext.Clients.Clients(studentId.ToString())
+                        .SendAsync("ReceiveNotification", notificationPayload);
                 }
 
                 await transaction.CommitAsync();

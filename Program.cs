@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 namespace ClassRoomClone_App.Server
 {
@@ -38,6 +39,16 @@ namespace ClassRoomClone_App.Server
                         .AllowCredentials() // Uncomment if credentials needed
                 );
             });
+            
+            
+            // Configure Serilog from appsettings.json and console sink
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration) // Read settings from appsettings.json
+                .WriteTo.Console() // Ensure console logging is enabled
+                .CreateLogger();
+
+            // Replace default logging with Serilog
+            builder.Host.UseSerilog();
 
             // Clear default claim type mapping to keep JWT claim names as-is
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();

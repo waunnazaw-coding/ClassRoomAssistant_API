@@ -17,5 +17,7 @@ public partial class Notification
 
     public DateTime? CreatedAt { get; set; }
 
+    public string? Message { get; set; }
+
     public virtual User User { get; set; } = null!;
 }

@@ -46,39 +46,40 @@ public partial class DbContextClassName : DbContext
     public virtual DbSet<Topic> Topics { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
-    
+
+    public virtual DbSet<UserConnection> UserConnections { get; set; }
+
     public virtual DbSet<UserNotificationRawDto> UserNotificationRawDtos { get; set; }
-    
+
     public virtual DbSet<UserClassesRawDto> UserClassesRawDtos { get; set; }
-    
+
     public virtual DbSet<ClassDetailsWithEntityId> ClassDetailsWithEntityId { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseLazyLoadingProxies().UseSqlServer("Server=.;Database=ClassRoomDb;User Id=sa;Password=waunnazaw;TrustServerCertificate=true;");
-    
+        => optionsBuilder.UseSqlServer("Server=.;Database=ClassRoomDb;User Id=sa;Password=waunnazaw;TrustServerCertificate=true;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        
         modelBuilder.Entity<ClassDetailsWithEntityId>(entity =>
         {
             entity.HasNoKey();
             entity.ToView(null);
         });
-        
+
         modelBuilder.Entity<UserNotificationRawDto>(entity =>
         {
             entity.HasNoKey();
             entity.ToView(null);
         });
-        
+
         modelBuilder.Entity<UserClassesRawDto>(entity =>
         {
             entity.HasNoKey();
             entity.ToView(null);
         });
-        
+
+
         modelBuilder.Entity<Announcement>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Announce__3214EC07E2CAF7DF");
@@ -313,6 +314,7 @@ public partial class DbContextClassName : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.IsRead).HasDefaultValue(false);
+            entity.Property(e => e.Message).HasMaxLength(500);
             entity.Property(e => e.Type)
                 .HasMaxLength(20)
                 .IsUnicode(false);
@@ -383,6 +385,16 @@ public partial class DbContextClassName : DbContext
             entity.Property(e => e.PasswordHash).HasMaxLength(255);
             entity.Property(e => e.RefreshToken).HasMaxLength(255);
             entity.Property(e => e.RefreshTokenExpiryTime).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<UserConnection>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.ConnectionId }).HasName("PK__UserConn__338C6A0535A66651");
+
+            entity.Property(e => e.ConnectionId).HasMaxLength(100);
+            entity.Property(e => e.ConnectedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
         });
 
         OnModelCreatingPartial(modelBuilder);
