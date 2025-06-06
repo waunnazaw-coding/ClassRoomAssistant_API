@@ -9,11 +9,11 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
 {
     public class AssignmentCreateRepository : IAssignmentCreateRepository
     {
-        private readonly IHubContext<NotificationHub> _notificationHubContext;
+        private readonly IHubContext<NotificationsHub, INotificationsClient> _notificationHubContext;
         private readonly string _connectionString;
         private readonly CloudinaryService _cloudinaryService;
 
-        public AssignmentCreateRepository(IConfiguration configuration, CloudinaryService cloudinaryService , IHubContext<NotificationHub> notificationHubContext)
+        public AssignmentCreateRepository(IConfiguration configuration, CloudinaryService cloudinaryService , IHubContext<NotificationsHub, INotificationsClient> notificationHubContext)
         {
             _notificationHubContext = notificationHubContext;
             _connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new ArgumentNullException(nameof(configuration));
@@ -131,20 +131,27 @@ namespace ClassRoomClone_App.Server.Repositories.Implements
                 var className = await RetrieveClassNameAsync(request.ClassId);
 
                 // Prepare notification payload
-                var notificationPayload = new
+                var notificationPayload = new NotificationPayload
                 {
+                    Type = "Assignment",
                     Title = $"New Assignment: {request.AssignmentTitle}",
                     ClassName = className ?? "Your class",
-                    AssignmentId = assignmentId,
-                    DueDate = request.DueDate?.ToString("yyyy-MM-dd HH:mm"), 
-                    Message = $"A new assignment '{request.AssignmentTitle}' has been created for class '{className ?? "your class"}'. Due date: {request.DueDate:yyyy-MM-dd HH:mm}."
+                    EntityId = assignmentId,
+                    DueDate = request.DueDate?.ToString("yyyy-MM-dd HH:mm"),
+                    Message = $"A new assignment '{request.AssignmentTitle}' has been created for class '{className ?? "your class"}'. Due date: {request.DueDate:yyyy-MM-dd HH:mm}.",
+                    //AdditionalData = new Dictionary<string, object>()
+                    //    {
+                    //        { "Priority", "High" },
+                    //        { "CreatedBy", "TeacherName" }
+                    //    }
                 };
 
-                // Send real-time notifications to each student user via SignalR hub context
+
+                // Send notifications to each student by user ID
                 foreach (var studentId in students)
                 {
-                    await _notificationHubContext.Clients.Clients(studentId.ToString())
-                        .SendAsync("ReceiveNotification", notificationPayload);
+                    await _notificationHubContext.Clients.User(studentId.ToString())
+                        .ReceiveNotification(notificationPayload);
                 }
 
                 await transaction.CommitAsync();

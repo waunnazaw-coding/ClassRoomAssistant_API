@@ -91,10 +91,12 @@ namespace ClassRoomClone_App.Server
                     };
                 });
 
-            builder.Services.AddHttpContextAccessor();
-            
             // Register custom IUserIdProvider
             builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
+
+            builder.Services.AddHttpContextAccessor();
+            
+            
             
             builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
@@ -233,7 +235,7 @@ namespace ClassRoomClone_App.Server
             app.UseEndpoints(endpoints =>
             {
                 
-                endpoints.MapHub<NotificationHub>("/notificationHub")
+                endpoints.MapHub<NotificationsHub>("/notificationHub")
                 .RequireAuthorization()
                 .RequireCors("AllowFrontend");;
                 
@@ -245,14 +247,16 @@ namespace ClassRoomClone_App.Server
             app.Run();
         }
     }
-    
+
     // Custom IUserIdProvider implementation
     public class NameUserIdProvider : IUserIdProvider
     {
         public string GetUserId(HubConnectionContext connection)
         {
-            // Use ClaimTypes.NameIdentifier or adjust to your claim
-            return connection.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            // Use "sub" claim if JWT uses it for user ID
+            return connection.User?.FindFirst("sub")?.Value
+                   ?? connection.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
     }
+
 }
